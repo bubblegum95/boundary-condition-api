@@ -185,7 +185,7 @@ export class MapService {
 
   async findOneObservatoryWeather(lat: number, lng: number) {
     try {
-      const distance = 30; // km
+      const distance = 50; // km
       const { minLat, maxLat, minLng, maxLng } = await this.getRangeOfLocation(
         lat,
         lng,
