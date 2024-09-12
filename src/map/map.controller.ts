@@ -48,22 +48,4 @@ export class MapController {
       });
     }
   }
-
-  @ApiConsumes('application/json')
-  @ApiOperation({
-    summary: '대기질 측정소',
-    description: '대기질 측정소',
-  })
-  @Get('station')
-  async getStation() {
-    const dto = {
-      addr: null,
-      stationName: null,
-      pageNo: 1,
-      numOfRows: 661,
-    };
-    console.log('hi');
-    await this.mapService.saveStations();
-    console.log('bye');
-  }
 }
