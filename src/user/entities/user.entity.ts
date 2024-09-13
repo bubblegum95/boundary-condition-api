@@ -33,7 +33,7 @@ export default class User {
   @Column({ type: 'boolean', nullable: false })
   agreed: boolean;
 
-  @Column({ type: 'boolean', nullable: false })
+  @Column({ type: 'boolean', nullable: false, default: false })
   verified: boolean;
 
   @CreateDateColumn()

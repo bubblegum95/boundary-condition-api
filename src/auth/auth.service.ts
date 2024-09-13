@@ -3,6 +3,7 @@ import AdminSignInDto from './dto/admin-signin.dto';
 import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import AdminSignUpDto from './dto/admin-signup.dto';
 
 @Injectable()
 export class AuthService {
@@ -10,9 +11,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService
-  ) {
-    // this.signUpAdmin()
-  }
+  ) {}
 
   async findRoleAdminAddr(dto: AdminSignInDto) {
     try {
@@ -60,19 +59,12 @@ export class AuthService {
     }
   }
 
-  async signUpAdmin(
-    email: string,
-    password: string,
-    name: string,
-    username: string
-  ) {
-    const dto = {
-      email,
-      password,
-      name,
-      username,
-    };
-
-    const hashedpassword = await this.userService.signUpAdmin(dto);
+  async signUpAdmin(dto: AdminSignUpDto) {
+    try {
+      const admin = await this.userService.signUpAdmin(dto);
+      return admin;
+    } catch (error) {
+      throw error;
+    }
   }
 }
