@@ -5,8 +5,16 @@ export default class AdminSignUpDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty({
-    description: '최대 위도(y좌표)',
-    example: 37.53,
+    description: '관리자 계정 이메일',
+    example: 'email@example.com',
+  })
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    description: '관리자 계정 비밀번호',
+    example: 'example1234',
   })
   password: string;
 }

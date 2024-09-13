@@ -21,11 +21,12 @@ export class AuthService {
     }
   }
 
-  async issueToken(email: string, id: number) {
+  async issueToken(email: string, id: number, roles: string[]) {
     try {
       const payload = {
         email,
         sub: id,
+        roles,
       };
       const token = this.jwtService.sign(payload);
 
@@ -37,7 +38,7 @@ export class AuthService {
 
   async verifyRoleAdmin(dto: AdminSignUpDto) {
     try {
-      const { email, id } = await this.findRoleAdminAddr(dto);
+      const { email, id, roles } = await this.findRoleAdminAddr(dto);
 
       if (!email) {
         throw new BadRequestException(
@@ -45,7 +46,7 @@ export class AuthService {
         );
       }
 
-      const token = await this.issueToken(email, id);
+      const token = await this.issueToken(email, id, roles);
 
       if (!token) {
         throw new Error('토큰을 발급할 수 없습니다.');

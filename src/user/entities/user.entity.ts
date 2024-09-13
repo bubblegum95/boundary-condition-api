@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Role } from '../type/role.type';
+import UserRole from './userRole.entity';
 
 @Entity({ name: 'user' })
 export default class User {
@@ -35,9 +37,9 @@ export default class User {
   @Column({ type: 'boolean', nullable: false })
   verified: boolean;
 
-  @Column({ type: 'enum', enum: Role })
-  role: Role;
-
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(() => UserRole, (userRoles) => userRoles.user)
+  userRoles: UserRole[];
 }

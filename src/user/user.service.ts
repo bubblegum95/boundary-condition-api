@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import AdminSignUpDto from '../auth/dto/admin-signup.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import User from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { Role } from './type/role.type';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -12,22 +12,41 @@ export class UserService {
     private readonly userRepository: Repository<User>
   ) {}
 
-  async findAdminAddress(dto: AdminSignUpDto) {
-    try {
-      const { password } = dto;
-      const foundAddr = await this.userRepository.findOne({
-        where: [{ role: Role.Admin }, { password }],
-      });
+  async verifyPassword(password: string, hash: string): Promise<boolean> {
+    return await bcrypt.compare(password, hash);
+  }
 
-      return foundAddr;
+  async findUserbyEmail(email: string) {
+    try {
+      return await this.userRepository.findOne({
+        where: { email },
+        relations: ['userRoles', 'userRoles.role'],
+      });
     } catch (error) {
       throw error;
     }
   }
 
-  async findUserbyEmail(email: string) {
+  async findAdminAddress(dto: AdminSignUpDto) {
     try {
-      return await this.userRepository.findOne({ where: { email } });
+      const { email, password } = dto;
+      const user = await this.findUserbyEmail(email);
+
+      if (!user) {
+        throw new BadRequestException('일치하는 계정이 없습니다.');
+      }
+
+      const isPassword = await this.verifyPassword(password, user.password);
+
+      if (!isPassword) {
+        throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+      }
+
+      return {
+        email: user.email,
+        id: user.id,
+        roles: user.userRoles.map((userRole) => userRole.role.name),
+      };
     } catch (error) {
       throw error;
     }

@@ -2,11 +2,20 @@ import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import AdminSignUpDto from './dto/admin-signup.dto';
 import { Response } from 'express';
+import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiConsumes('application/json')
+  @ApiOperation({
+    summary: '관리자 계정 로그인',
+    description: '관리자 계정 로그인',
+  })
+  @ApiBody({
+    type: AdminSignUpDto,
+  })
   @Post('signup/admin')
   async signUpAdmin(@Body() dto: AdminSignUpDto, @Res() res: Response) {
     try {
