@@ -22,12 +22,10 @@ export class AuthController {
   async signInAdmin(@Body() dto: AdminSignInDto, @Res() res: Response) {
     try {
       const token = await this.authService.verifyRoleAdmin(dto);
-      return res
-        .status(HttpStatus.OK)
-        .json({
-          message: '관리자 페이지 로그인 성공',
-        })
-        .setHeader('Authorization', `Bearer ${token}`);
+      res.setHeader('Authorization', `Bearer ${token}`);
+      return res.status(HttpStatus.OK).json({
+        message: '관리자 페이지 로그인 성공',
+      });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         message: `관리자 페이지에 로그인할 수 없습니다. ${error.message}`,

@@ -6,7 +6,7 @@ export default class AdminSignInDto {
   @IsNotEmpty()
   @ApiProperty({
     description: '관리자 계정 이메일',
-    example: 'email@example.com',
+    example: 'example@email.com',
   })
   email: string;
 

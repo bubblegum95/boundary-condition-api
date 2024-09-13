@@ -28,7 +28,6 @@ export class UserService {
     try {
       return await this.userRepository.findOne({
         where: { email },
-        relations: ['userRoles', 'userRoles.role'],
       });
     } catch (error) {
       throw error;
@@ -38,8 +37,8 @@ export class UserService {
   async makeUserAddr(dto: SignUpDto) {
     try {
       const { name, username, email, password, phone, address } = dto;
-      const salt = 10;
-      const hashedpassword = bcrypt.hash(password, salt);
+      const salt = 5;
+      const hashedpassword = await bcrypt.hash(password, salt);
       const user = await this.userRepository.save({
         name,
         username,
@@ -65,7 +64,6 @@ export class UserService {
   async makeRole(name: string) {
     const nameUpCase = name.toUpperCase();
     const role = await this.roleRepository.save({ name: nameUpCase });
-    console.log(role);
     return role;
   }
 
@@ -76,6 +74,20 @@ export class UserService {
     });
 
     return madeUserRole;
+  }
+
+  async findUserRole(userId: number) {
+    try {
+      const userRoles = await this.userRoleRepository.find({
+        where: { userId },
+        relations: ['role'],
+      });
+      const roles = userRoles.map((userRole) => userRole.role.name);
+      console.log(roles);
+      return roles;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async findAdminAddress(dto: AdminSignInDto) {
@@ -93,10 +105,11 @@ export class UserService {
         throw new BadRequestException('비밀번호가 일치하지 않습니다.');
       }
 
+      const roles = await this.findUserRole(user.id);
       return {
         email: user.email,
         id: user.id,
-        roles: user.userRoles.map((userRole) => userRole.role.name),
+        roles,
       };
     } catch (error) {
       throw error;
@@ -125,7 +138,6 @@ export class UserService {
       const role = await this.findRole('ADMIN');
       const madeUserRole = await this.makeRoleRelation(admin.id, role.id);
 
-      console.log(admin, madeUserRole);
       return admin.email;
     } catch (error) {
       throw error;
