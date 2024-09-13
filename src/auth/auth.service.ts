@@ -29,6 +29,7 @@ export class AuthService {
         sub: id,
         roles,
       };
+      console.log('payload: ', payload);
       const token = this.jwtService.sign(payload);
 
       return token;
