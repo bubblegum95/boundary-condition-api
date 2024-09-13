@@ -35,6 +35,14 @@ export class AuthController {
     }
   }
 
+  @ApiConsumes('application/json')
+  @ApiOperation({
+    summary: '관리자 계정 회원가입',
+    description: '관리자 계정 회원가입',
+  })
+  @ApiBody({
+    type: AdminSignUpDto,
+  })
   @Post('admin/signup')
   async signUpAdmin(@Body() dto: AdminSignUpDto, @Res() res: Response) {
     try {
