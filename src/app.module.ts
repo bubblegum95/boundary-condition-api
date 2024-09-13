@@ -10,6 +10,8 @@ import { WinstonModule } from 'nest-winston';
 import { LoggingInterceptor } from './loggingInterceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { winstonConfig } from '../config/winston.config';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -43,6 +45,8 @@ const typeOrmModuleOptions = {
     WinstonModule.forRoot(winstonConfig),
     MapModule,
     RedisModule,
+    AuthModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [
