@@ -38,7 +38,8 @@ export class UserService {
   async makeUserAddr(dto: SignUpDto) {
     try {
       const { name, username, email, password, phone, address } = dto;
-      const hashedpassword = bcrypt.hash(password);
+      const salt = '10';
+      const hashedpassword = bcrypt.hash(password, salt);
       const user = await this.userRepository.save({
         name,
         username,
