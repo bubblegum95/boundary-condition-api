@@ -1,6 +1,6 @@
 import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import AdminSignUpDto from './dto/admin-signup.dto';
+import AdminSignInDto from './dto/admin-signin.dto';
 import { Response } from 'express';
 import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 
@@ -14,10 +14,10 @@ export class AuthController {
     description: '관리자 계정 로그인',
   })
   @ApiBody({
-    type: AdminSignUpDto,
+    type: AdminSignInDto,
   })
   @Post('signup/admin')
-  async signUpAdmin(@Body() dto: AdminSignUpDto, @Res() res: Response) {
+  async signUpAdmin(@Body() dto: AdminSignInDto, @Res() res: Response) {
     try {
       const token = await this.authService.verifyRoleAdmin(dto);
       return res

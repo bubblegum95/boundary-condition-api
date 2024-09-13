@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import AdminSignUpDto from './dto/admin-signup.dto';
+import AdminSignInDto from './dto/admin-signin.dto';
 import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -10,9 +10,11 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService
-  ) {}
+  ) {
+    // this.signUpAdmin()
+  }
 
-  async findRoleAdminAddr(dto: AdminSignUpDto) {
+  async findRoleAdminAddr(dto: AdminSignInDto) {
     try {
       const foundAddr = await this.userService.findAdminAddress(dto);
       return foundAddr;
@@ -36,7 +38,7 @@ export class AuthService {
     }
   }
 
-  async verifyRoleAdmin(dto: AdminSignUpDto) {
+  async verifyRoleAdmin(dto: AdminSignInDto) {
     try {
       const { email, id, roles } = await this.findRoleAdminAddr(dto);
 
@@ -56,5 +58,21 @@ export class AuthService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async signUpAdmin(
+    email: string,
+    password: string,
+    name: string,
+    username: string
+  ) {
+    const dto = {
+      email,
+      password,
+      name,
+      username,
+    };
+
+    const hashedpassword = await this.userService.signUpAdmin(dto);
   }
 }

@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import User from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import AdminSignInDto from '../auth/dto/admin-signin.dto';
 
 @Injectable()
 export class UserService {
@@ -27,7 +28,7 @@ export class UserService {
     }
   }
 
-  async findAdminAddress(dto: AdminSignUpDto) {
+  async findAdminAddress(dto: AdminSignInDto) {
     try {
       const { email, password } = dto;
       const user = await this.findUserbyEmail(email);
@@ -47,6 +48,24 @@ export class UserService {
         id: user.id,
         roles: user.userRoles.map((userRole) => userRole.role.name),
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async signUpAdmin(dto: AdminSignUpDto) {
+    try {
+      const { name, username, email, password } = dto;
+      const hashedpassword = bcrypt.hash(password);
+      const user = this.userRepository.save({
+        name,
+        username,
+        email,
+        password: hashedpassword,
+        verified: false,
+        agreed: false,
+      });
+      console.log(user);
     } catch (error) {
       throw error;
     }
