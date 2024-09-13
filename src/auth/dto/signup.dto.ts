@@ -3,4 +3,7 @@ export default class SignUpDto {
   password: string;
   name: string;
   username: string;
+  phone: string;
+  address: string;
+  agreed: boolean;
 }
