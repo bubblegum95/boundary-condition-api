@@ -12,7 +12,6 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { winstonConfig } from '../config/winston.config';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { JwtModule } from './jwt/jwt.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -48,7 +47,6 @@ const typeOrmModuleOptions = {
     RedisModule,
     AuthModule,
     UserModule,
-    JwtModule,
   ],
   controllers: [AppController],
   providers: [
