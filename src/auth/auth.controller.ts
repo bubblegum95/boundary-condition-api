@@ -10,7 +10,7 @@ import AdminSignUpDto from './dto/admin-signup.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiConsumes('application/json')
+  @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOperation({
     summary: '관리자 계정 로그인',
     description: '관리자 계정 로그인',
@@ -22,7 +22,8 @@ export class AuthController {
   async signInAdmin(@Body() dto: AdminSignInDto, @Res() res: Response) {
     try {
       const token = await this.authService.signInAdmin(dto);
-      res.setHeader('Authorization', `Bearer ${token}`);
+      const options = { httpOnly: true, secure: true };
+      res.cookie('authorization', `Bearer ${token}`, options);
       return res.status(HttpStatus.OK).json({
         message: '관리자 페이지에 로그인하였습니다',
       });
@@ -34,7 +35,7 @@ export class AuthController {
     }
   }
 
-  @ApiConsumes('application/json')
+  @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOperation({
     summary: '관리자 계정 회원가입',
     description: '관리자 계정 회원가입',

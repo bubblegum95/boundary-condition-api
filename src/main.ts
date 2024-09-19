@@ -10,8 +10,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  setupSwagger(app);
-
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
@@ -27,7 +25,7 @@ async function bootstrap() {
     credentials: true,
     allowedHeaders: 'Content-Type, Authorization',
   });
-
+  setupSwagger(app);
   // websocket adapter 설정
   // const socketPort = configService.get<number>('SOCKET_PORT');
   // const redisIoAdapter = new RedisIoAdapter(app, socketPort);

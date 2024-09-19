@@ -16,7 +16,7 @@ export function setupSwagger(app: INestApplication): void {
       {
         type: 'http',
         scheme: 'bearer',
-        name: 'JWT',
+        bearerFormat: 'JWT',
         in: 'cookies',
       },
       'authorization'

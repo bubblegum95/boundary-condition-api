@@ -12,6 +12,9 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { winstonConfig } from '../config/winston.config';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { ArticleModule } from './article/article.module';
+import { JwtModule } from '@nestjs/jwt';
+import { CategoryModule } from './category/category.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -39,6 +42,17 @@ const typeOrmModuleOptions = {
 @Module({
   imports: [
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
+    JwtModule.registerAsync({
+      global: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET_KEY'),
+        signOptions: {
+          expiresIn: '7d',
+        },
+      }),
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -47,6 +61,8 @@ const typeOrmModuleOptions = {
     RedisModule,
     AuthModule,
     UserModule,
+    ArticleModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [
