@@ -1,14 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateArticleDto } from './dto/create-article.dto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { CreateArticleWithLinkDto } from './dto/create-article-with-link.dto';
 import { UpdateArticleWithLinkDto } from './dto/update-article-with-link.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import Article from './entities/article.entity';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { DataSource, Like, QueryRunner, Repository } from 'typeorm';
 import Category from '../category/entities/category.entity';
 import CreateArticleWithImageDto from './dto/create-article-with-image.dto';
 import { UserService } from '../user/user.service';
 import UserInfoDto from '../auth/dto/userinfo.dto';
-import SaveArticleDto from './dto/save-article.dto';
+import { CreateArticleDto } from './dto/create-article.dto';
 import Thumbnail from './entities/thumbnail.entity';
 import * as fs from 'fs';
 import { join } from 'path';
@@ -16,15 +21,15 @@ import FindArticleQueryDto from './dto/find-article-query.dto';
 import UpdateArticleWithImageDto from './dto/update-article-with-image.dto';
 import UpdateArticleDto from './dto/update-article.dto';
 import { CategoryService } from '../category/category.service';
+import UpdateExposableDto from './dto/update-exposable.dto';
+import { SearchArticleQueryDto } from './dto/search-article-query.dto';
 
 @Injectable()
 export class ArticleService {
   constructor(
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
-    @InjectRepository(Thumbnail)
-    private readonly thumbnailRepository: Repository<Thumbnail>,
-    @InjectRepository(Category)
+    @InjectDataSource()
     private readonly dataSource: DataSource,
     private readonly userService: UserService,
     private readonly categoryService: CategoryService
@@ -64,17 +69,20 @@ export class ArticleService {
 
   filterDate(date: Date) {
     try {
-      return new Date(date).toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      });
+      const newDate = new Date(date);
+      const year = newDate.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      // '0000.00.00' 형식으로 조합
+      const formattedDate = `${year}.${month}.${day}`;
+      return formattedDate;
     } catch (error) {
       throw error;
     }
   }
 
-  async saveArticle(dto: SaveArticleDto, queryRunner: QueryRunner) {
+  async saveArticle(dto: CreateArticleDto, queryRunner: QueryRunner) {
     try {
       const {
         userId,
@@ -101,11 +109,12 @@ export class ArticleService {
 
   async findAllArticlesForAdmin(query: FindArticleQueryDto) {
     try {
-      const { items, page } = query;
+      const { limit, page } = query;
       const foundArticles = await this.articleRepository.find({
         relations: ['category', 'thumbnail'],
-        skip: (page - 1) * items,
-        take: items,
+        skip: (page - 1) * limit,
+        take: limit,
+        order: { id: 'DESC' },
       });
       let articleArr = [];
       foundArticles.map((foundArticle) => {
@@ -113,6 +122,7 @@ export class ArticleService {
         const article = {
           id: foundArticle.id,
           title: foundArticle.title,
+          subtitle: foundArticle.subtitle,
           category: foundArticle.category.name,
           exposable: foundArticle.exposable,
           createdAt: filteredDate,
@@ -125,7 +135,10 @@ export class ArticleService {
     }
   }
 
-  async createArticleWithLink(dto: CreateArticleDto, user: UserInfoDto) {
+  async createArticleWithLink(
+    dto: CreateArticleWithLinkDto,
+    user: UserInfoDto
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -135,14 +148,14 @@ export class ArticleService {
       const { email, roles } = user;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
-        throw new BadRequestException('해당 계정이 존재하지 않습니다.');
+        throw new NotFoundException('해당 계정이 존재하지 않습니다.');
       }
       if (!roles.includes('ADMIN')) {
-        throw new BadRequestException('해당 계정에 관리자 권한이 없습니다.');
+        throw new UnauthorizedException('관리자 권한이 없습니다.');
       }
       const foundCategory = await this.findCategoryByName(category);
       if (!foundCategory) {
-        throw new BadRequestException('해당 카테고리가 존재하지 않습니다.');
+        throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
       }
       const savedThumbnail = await this.createThumbnail(thumbnail, queryRunner);
       if (!savedThumbnail) {
@@ -185,14 +198,14 @@ export class ArticleService {
       const { email, roles } = user;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
-        throw new BadRequestException('해당 계정이 존재하지 않습니다.');
+        throw new NotFoundException('해당 계정이 존재하지 않습니다.');
       }
       if (!roles.includes('ADMIN')) {
-        throw new BadRequestException('해당 계정에 관리자 권한이 없습니다.');
+        throw new UnauthorizedException('관리자 권한이 없습니다.');
       }
       const foundCategory = await this.findCategoryByName(category);
       if (!foundCategory) {
-        throw new BadRequestException('해당 카테고리가 존재하지 않습니다.');
+        throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
       }
       const path = await this.saveThumbnailImage(image);
       if (!path) {
@@ -225,43 +238,25 @@ export class ArticleService {
     }
   }
 
-  async findAll(user: UserInfoDto, query: FindArticleQueryDto) {
+  async findAllForAdmin(user: UserInfoDto, query: FindArticleQueryDto) {
     const { email, roles } = user;
     const foundUser = await this.userService.findUserbyEmail(email);
     if (!foundUser) {
-      throw new BadRequestException('해당 계정이 존재하지 않습니다.');
+      throw new NotFoundException('해당 계정이 존재하지 않습니다.');
     }
     if (!roles.includes('ADMIN')) {
-      throw new BadRequestException('해당 계정에 관리자 권한이 없습니다.');
+      throw new UnauthorizedException('관리자 권한이 없습니다.');
     }
     const articles = await this.findAllArticlesForAdmin(query);
     return articles;
   }
 
-  async findOne(id: number) {
+  async findOneById(id: number) {
     try {
       return await this.articleRepository.findOne({
         where: { id },
         relations: ['thumbnail', 'category'],
       });
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async findArticle(id: number) {
-    try {
-      const article = await this.findOne(id);
-      return {
-        id: article.id,
-        title: article.title,
-        subtitle: article.subtitle,
-        link: article.link,
-        thumbnail: article.thumbnail.path,
-        category: article.category.name,
-        exposeble: article.exposable,
-        createdAt: article.createdAt,
-      };
     } catch (error) {
       throw error;
     }
@@ -326,14 +321,14 @@ export class ArticleService {
       let categoryId = 0;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
-        throw new BadRequestException('해당 계정이 존재하지 않습니다.');
+        throw new NotFoundException('해당 계정이 존재하지 않습니다.');
       }
       if (!roles.includes('ADMIN')) {
-        throw new BadRequestException('해당 계정에 관리자 권한이 없습니다.');
+        throw new UnauthorizedException('관리자 권한이 없습니다.');
       }
-      const foundArticle = await this.findOne(id);
+      const foundArticle = await this.findOneById(id);
       if (!foundArticle) {
-        throw new BadRequestException('해당 아티클이 존재하지 않습니다.');
+        throw new NotFoundException('해당 아티클이 존재하지 않습니다.');
       }
       if (!title) {
         title = foundArticle.title;
@@ -399,14 +394,14 @@ export class ArticleService {
       let categoryId = 0;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
-        throw new BadRequestException('해당 계정이 존재하지 않습니다.');
+        throw new NotFoundException('해당 계정이 존재하지 않습니다.');
       }
       if (!roles.includes('ADMIN')) {
-        throw new BadRequestException('관리자 권한이 없습니다.');
+        throw new UnauthorizedException('관리자 권한이 없습니다.');
       }
-      const foundArticle = await this.findOne(id);
+      const foundArticle = await this.findOneById(id);
       if (!foundArticle) {
-        throw new BadRequestException('해당 아티클이 존재하지 않습니다.');
+        throw new NotFoundException('해당 아티클이 존재하지 않습니다.');
       }
       if (!title) {
         title = foundArticle.title;
@@ -456,25 +451,30 @@ export class ArticleService {
     }
   }
 
-  async updateExposable(user: UserInfoDto, id: number, exposable: boolean) {
+  async updateExposable(
+    user: UserInfoDto,
+    id: number,
+    dto: UpdateExposableDto
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       const { email, roles } = user;
-      const existUser = await this.userService.findUserbyEmail(email);
-      if (!existUser) {
-        throw new BadRequestException('해당 계정이 존재하지 않습니다.');
+      const { exposable } = dto;
+      const foundUser = await this.userService.findUserbyEmail(email);
+      if (!foundUser) {
+        throw new NotFoundException('해당 계정이 존재하지 않습니다.');
       }
       if (!roles.includes('ADMIN')) {
-        throw new BadRequestException('관리자 권한이 없습니다.');
+        throw new UnauthorizedException('관리자 권한이 없습니다.');
       }
-      const foundArticle = await this.findOne(id);
+      const foundArticle = await this.findOneById(id);
       if (!foundArticle) {
-        throw new BadRequestException('해당 아티클이 존재하지 않습니다.');
+        throw new NotFoundException('해당 아티클이 존재하지 않습니다.');
       }
-      const dto = {
+      const newDto = {
         userId: foundArticle.userId,
         title: foundArticle.title,
         subtitle: foundArticle.subtitle,
@@ -484,7 +484,7 @@ export class ArticleService {
         exposable,
         createdAt: foundArticle.createdAt,
       };
-      await this.updateArticle(id, dto, queryRunner);
+      await this.updateArticle(id, newDto, queryRunner);
       return true;
     } catch (error) {
       queryRunner.rollbackTransaction();
@@ -499,17 +499,91 @@ export class ArticleService {
       const { email, roles } = user;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
-        throw new BadRequestException('해당 계정이 존재하지 않습니다.');
+        throw new NotFoundException('해당 계정이 존재하지 않습니다.');
       }
       if (!roles.includes('ADMIN')) {
-        throw new BadRequestException('관리자 권한이 없습니다.');
+        throw new UnauthorizedException('관리자 권한이 없습니다.');
       }
-      const foundArticle = await this.findArticle(id);
+      const foundArticle = await this.findOneById(id);
       if (!foundArticle) {
-        throw new BadRequestException('해당 아티클이 존재하지 않습니다.');
+        throw new NotFoundException('해당 아티클이 존재하지 않습니다.');
       }
       await this.articleRepository.delete({ id });
       return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findAllForUser(dto: SearchArticleQueryDto) {
+    try {
+      const { category, keyword, page, limit } = dto;
+      let where: any = {};
+
+      if (category) {
+        const foundCategory =
+          await this.categoryService.findOneByName(category);
+        if (!foundCategory) {
+          throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
+        }
+        where.categoryId = foundCategory.id;
+      }
+
+      if (keyword) {
+        where.title = Like(`%${keyword}%`);
+        where.subtitle = Like(`%${keyword}%`);
+      }
+
+      const articles = await this.articleRepository.find({
+        where,
+        relations: ['category', 'thumbnail'],
+        skip: (page - 1) * limit,
+        take: limit,
+        order: { id: 'DESC' },
+      });
+      let data = [];
+      articles.map((article) => {
+        const newDate = this.filterDate(article.createdAt);
+        const newData = {
+          id: article.id,
+          title: article.title,
+          subtitle: article.subtitle,
+          category: article.category.name,
+          thumbnail: article.thumbnail.path,
+          link: article.link,
+          createdAt: newDate,
+        };
+        data.push(newData);
+      });
+      console.log('find all for user: ', data);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findInMap() {
+    try {
+      const articles = await this.articleRepository.find({
+        relations: ['category', 'thumbnail'],
+        take: 2,
+        order: { id: 'DESC' },
+      });
+      let data = [];
+      articles.map((article) => {
+        const newDate = this.filterDate(article.createdAt);
+        const newData = {
+          id: article.id,
+          title: article.title,
+          subtitle: article.subtitle,
+          category: article.category.name,
+          thumbnail: article.thumbnail.path,
+          link: article.link,
+          createdAt: newDate,
+        };
+        data.push(newData);
+      });
+      return data;
     } catch (error) {
       throw error;
     }

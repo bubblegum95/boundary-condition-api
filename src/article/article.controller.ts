@@ -14,19 +14,26 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
-import { CreateArticleDto } from './dto/create-article.dto';
+import { CreateArticleWithLinkDto } from './dto/create-article-with-link.dto';
 import { UpdateArticleWithLinkDto } from './dto/update-article-with-link.dto';
 import CreateArticleWithImageDto from './dto/create-article-with-image.dto';
 import { UserInfo } from '../utils/user-info.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import UserInfoDto from '../auth/dto/userinfo.dto';
 import { Express, Response } from 'express';
-import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import FindArticleQueryDto from './dto/find-article-query.dto';
 import UpdateArticleWithImageDto from './dto/update-article-with-image.dto';
-import UpdateSearchableDto from './dto/update-searchable.dto';
 import UpdateExposableDto from './dto/update-exposable.dto';
+import FindArticlesDto from './dto/find-articles.dto';
+import { SearchArticleQueryDto } from './dto/search-article-query.dto';
 
 @ApiTags('Article')
 @Controller('articles')
@@ -40,13 +47,13 @@ export class ArticleController {
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiBody({
-    type: CreateArticleDto,
+    type: CreateArticleWithLinkDto,
   })
   @UseGuards(JwtAuthGuard)
-  @Post('admin/url')
+  @Post('admin')
   async createArticleWithLink(
     @Res() res: Response,
-    @Body() dto: CreateArticleDto,
+    @Body() dto: CreateArticleWithLinkDto,
     @UserInfo() user: UserInfoDto
   ) {
     try {
@@ -55,7 +62,11 @@ export class ArticleController {
         message: '아티클 생성 완료',
       });
     } catch (error) {
-      return res.status(HttpStatus.CONFLICT).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: error.message,
       });
     }
@@ -84,7 +95,11 @@ export class ArticleController {
         message: `아티클 생성 완료`,
       });
     } catch (error) {
-      return res.status(HttpStatus.CONFLICT).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '아티클을 생성할 수 없습니다.',
         error: error.message,
       });
@@ -96,8 +111,9 @@ export class ArticleController {
     description: '관리자 아티클 목록 조회',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
-  @ApiBody({
-    type: CreateArticleWithImageDto,
+  @ApiOkResponse({
+    description: '아티클 목록을 조회합니다.',
+    type: [FindArticlesDto],
   })
   @UseGuards(JwtAuthGuard)
   @Get('admin')
@@ -107,13 +123,17 @@ export class ArticleController {
     @UserInfo() user: UserInfoDto
   ) {
     try {
-      const articles = await this.articleService.findAll(user, query);
+      const articles = await this.articleService.findAllForAdmin(user, query);
       return res.status(HttpStatus.OK).json({
         message: '아티클 목록을 조회합니다.',
         data: articles,
       });
     } catch (error) {
-      return res.status(HttpStatus.CONFLICT).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '아티클 목록을 조회할 수 없습니다.',
         error: error.message,
       });
@@ -126,12 +146,12 @@ export class ArticleController {
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiBody({
-    type: UpdateArticleWithImageDto,
+    type: UpdateArticleWithLinkDto,
   })
   @UseGuards(JwtAuthGuard)
-  @Patch('admin/url/:id')
+  @Patch('admin/:id')
   async updateArticleWithUrl(
-    @Query('id') id: number,
+    @Param('id') id: number,
     @Body() updateArticleDto: UpdateArticleWithLinkDto,
     @UserInfo() user: UserInfoDto,
     @Res() res: Response
@@ -146,7 +166,11 @@ export class ArticleController {
         message: '아티클 수정을 완료하였습니다.',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '아티클을 수정할 수 없습니다.',
         error: error.message,
       });
@@ -177,7 +201,11 @@ export class ArticleController {
         message: '아티클 수정을 완료하였습니다.',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '아티클을 수정할 수 없습니다.',
         error: error.message,
       });
@@ -186,7 +214,7 @@ export class ArticleController {
 
   @ApiOperation({
     summary: '아티클 수정',
-    description: '아티클 검색 허용 여부 수정',
+    description: '아티클 지도 페이지 노출 허용 여부 수정',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiBody({
@@ -195,18 +223,22 @@ export class ArticleController {
   @UseGuards(JwtAuthGuard)
   @Patch('admin/exposable/:id')
   async updateExposable(
-    @Body('exposable') exposable: boolean,
+    @Body() dto: UpdateExposableDto,
     @Param('id') id: number,
     @UserInfo() user: UserInfoDto,
     @Res() res: Response
   ) {
     try {
-      await this.articleService.updateExposable(user, id, exposable);
+      await this.articleService.updateExposable(user, id, dto);
       return res.status(HttpStatus.OK).json({
         message: '아티클 지도노출여부를 수정하였습니다.',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '아티클 지도노출여부를 수정할 수 없습니다.',
         error: error.message,
       });
@@ -219,7 +251,7 @@ export class ArticleController {
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @UseGuards(JwtAuthGuard)
-  @Delete('admin/articles/:id')
+  @Delete('admin/:id')
   async remove(
     @Param('id') id: string,
     @UserInfo() user: UserInfoDto,
@@ -231,7 +263,11 @@ export class ArticleController {
         message: '아티클을 삭제하였습니다.',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '아티클을 삭제할 수 없습니다.',
         error: error.message,
       });
@@ -239,8 +275,56 @@ export class ArticleController {
   }
 
   // 사용자 페이지
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.articleService.findOne(+id);
+  @ApiOperation({
+    summary: '아티클 조회',
+    description: '아티클 카테고리 및 키워드 조회',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @Get()
+  async findAllForUser(
+    @Query() dto: SearchArticleQueryDto,
+    @Res() res: Response
+  ) {
+    try {
+      const data = await this.articleService.findAllForUser(dto);
+      return res.status(HttpStatus.OK).json({
+        message: '아티클을 조회합니다.',
+        data: data,
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '아티클을 조회할 수 없습니다.',
+        error: error.message,
+      });
+    }
+  }
+
+  @ApiOperation({
+    summary: '아티클 조회',
+    description: '지도페이지 내 아티클 조회',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @Get('map')
+  async findInMap(@Res() res: Response) {
+    try {
+      const data = await this.articleService.findInMap();
+      return res.status(HttpStatus.OK).json({
+        message: '아티클을 조회합니다.',
+        data,
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '아티클을 조회할 수 없습니다.',
+        error: error.message,
+      });
+    }
   }
 }

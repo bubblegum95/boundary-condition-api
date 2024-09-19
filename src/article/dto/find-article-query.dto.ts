@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsNumber } from 'class-validator';
 
 export default class FindArticleQueryDto {
@@ -8,7 +9,8 @@ export default class FindArticleQueryDto {
     description: '아티클 아이템 개수',
     example: 10,
   })
-  items: number;
+  @Transform(({ value }) => Number(value))
+  limit: number;
 
   @IsNumber()
   @IsNotEmpty()
@@ -16,5 +18,6 @@ export default class FindArticleQueryDto {
     description: '목록 페이지',
     example: 1,
   })
+  @Transform(({ value }) => Number(value))
   page: number;
 }

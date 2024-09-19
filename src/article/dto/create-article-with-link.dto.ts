@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
-export default class CreateArticleWithImageDto {
+export class CreateArticleWithLinkDto {
   @IsString()
   @IsNotEmpty({ message: '아티클 제목을 입력해주세요.' })
   @ApiProperty({
@@ -28,6 +28,14 @@ export default class CreateArticleWithImageDto {
   link: string;
 
   @IsString()
+  @IsNotEmpty({ message: '아티클 썸네일을 입력해주세요.' })
+  @ApiProperty({
+    example: '아티클 썸네일 이미지 url',
+    description: '아티클 썸네일 이미지 url',
+  })
+  thumbnail: string;
+
+  @IsString()
   @IsNotEmpty({ message: '카테고리를 선택해주세요.' })
   @ApiProperty({
     example: '아티클 카테고리 이름',
@@ -35,20 +43,12 @@ export default class CreateArticleWithImageDto {
   })
   category: string;
 
-  @IsString()
-  @IsNotEmpty({ message: '아티클 지도페이지 노출 허용 여부를 선택해주세요.' })
+  @IsBoolean()
+  @IsNotEmpty({ message: '아티클 지도페이지 노출 여부를 선택해주세요.' })
+  @Transform(({ value }) => value === 'true' || value === true)
   @ApiProperty({
     example: true,
-    description: '아티클 지도페이지 노출 허용 여부 허용 여부',
+    description: '아티클 지도페이지 노출 여부',
   })
-  @Transform(({ value }) => value === 'true' || value === true)
   exposable: boolean;
-
-  @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    description: '썸네일 이미지 업로드',
-  })
-  @IsNotEmpty({ message: '썸네일 이미지를 업로드해주세요.' })
-  image: any;
 }

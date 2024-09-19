@@ -11,15 +11,23 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
-import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiOperation,
+  ApiProduces,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserInfo } from '../utils/user-info.decorator';
 import UserInfoDto from '../auth/dto/userinfo.dto';
 import CreateCategoryDto from './dto/create-category.dto';
 import { Response } from 'express';
-import UpdateCategoryNameDto from './dto/update-category-name.dto';
 import UpdateCategoryNumberDto from './dto/update-category-number.dto';
 import UpdateCategoryIsUsedDto from './dto/update-category-isused.dto';
+import UpdateCategoryAccessibleDto from './dto/update-category-accessible.dto';
+import FindCategoriesDto from './dto/find-categories.dto';
 
 @ApiTags('Category')
 @Controller('categories')
@@ -43,11 +51,15 @@ export class CategoryController {
   ) {
     try {
       await this.categoryService.createCategory(user, dto);
-      return res.status(HttpStatus.OK).json({
+      return res.status(HttpStatus.CREATED).json({
         message: '카테고리를 생성하였습니다.',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '카테고리를 생성할 수 없습니다.',
         error: error.message,
       });
@@ -59,16 +71,54 @@ export class CategoryController {
     description: '아티클 카테고리 목록 조회',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '카테고리 목록을 조회합니다.',
+    type: [FindCategoriesDto],
+  })
+  @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@Res() res: Response) {
+  async findAll(@Res() res: Response, @UserInfo() user: UserInfoDto) {
     try {
-      const categories = this.categoryService.findAll();
+      const categories = await this.categoryService.findAllForAdmin(user);
       return res.status(HttpStatus.OK).json({
         message: '카테고리 목록을 조회합니다.',
         data: categories,
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '카테고리 목록을 조회할 수 없습니다.',
+        error: error.message,
+      });
+    }
+  }
+
+  @ApiOperation({
+    summary: '아티클 카테고리 목록 조회',
+    description: '아티클 카테고리 isUsed: true인 카테고리만 조회',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '카테고리 목록을 조회합니다.',
+    type: [FindCategoriesDto],
+  })
+  @Get('is-used')
+  async findPartcial(@Res() res: Response) {
+    try {
+      const categories = await this.categoryService.findUsed();
+      return res.status(HttpStatus.OK).json({
+        message: '카테고리 목록을 조회합니다.',
+        data: categories,
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '카테고리 목록을 조회할 수 없습니다.',
         error: error.message,
       });
@@ -81,13 +131,13 @@ export class CategoryController {
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiBody({
-    type: UpdateCategoryNameDto,
+    type: CreateCategoryDto,
   })
   @UseGuards(JwtAuthGuard)
   @Patch('admin/name/:id')
   async updateName(
-    @Param('id') id: string,
-    @Body() dto: UpdateCategoryNameDto,
+    @Param('id') id: number,
+    @Body() dto: CreateCategoryDto,
     @UserInfo() user: UserInfoDto,
     @Res() res: Response
   ) {
@@ -97,7 +147,11 @@ export class CategoryController {
         message: '카테고리 이름을 수정하였습니다.',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '카테고리 이름을 수정할 수 없습니다.',
         error: error.message,
       });
@@ -110,12 +164,12 @@ export class CategoryController {
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiBody({
-    type: UpdateCategoryNameDto,
+    type: UpdateCategoryNumberDto,
   })
   @UseGuards(JwtAuthGuard)
   @Patch('admin/number/:id')
   async updateNumber(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() dto: UpdateCategoryNumberDto,
     @UserInfo() user: UserInfoDto,
     @Res() res: Response
@@ -126,7 +180,11 @@ export class CategoryController {
         message: '카테고리 순번을 변경하였습니다.',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '카테고리 순번을 변경할 수 없습니다.',
         error: error.message,
       });
@@ -134,8 +192,8 @@ export class CategoryController {
   }
 
   @ApiOperation({
-    summary: '아티클 카테고리 순번 수정',
-    description: '아티클 카테고리 순번 수정',
+    summary: '아티클 카테고리 사용여부 수정',
+    description: '아티클 카테고리 사용여부 수정',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiBody({
@@ -143,8 +201,8 @@ export class CategoryController {
   })
   @UseGuards(JwtAuthGuard)
   @Patch('admin/is-used/:id')
-  async update(
-    @Param('id') id: string,
+  async updateIsUsed(
+    @Param('id') id: number,
     @Body() dto: UpdateCategoryIsUsedDto,
     @UserInfo() user: UserInfoDto,
     @Res() res: Response
@@ -155,15 +213,76 @@ export class CategoryController {
         message: '카테고리 사용여부를 변경하였습니다.',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
         message: '카테고리 사용여부를 변경할 수 없습니다.',
         error: error.message,
       });
     }
   }
 
+  @ApiOperation({
+    summary: '아티클 카테고리 비회원 사용자 접근 허용 여부 수정',
+    description: '아티클 카테고리 비회원 사용자 접근 허용 여부 수정',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiBody({
+    type: UpdateCategoryAccessibleDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Patch('admin/accessible/:id')
+  async updateAccessible(
+    @Param('id') id: number,
+    @Body() dto: UpdateCategoryAccessibleDto,
+    @UserInfo() user: UserInfoDto,
+    @Res() res: Response
+  ) {
+    try {
+      await this.categoryService.updateAccessible(+id, dto, user);
+      return res.status(HttpStatus.OK).json({
+        message: '카테고리 비회원사용자 접근 허용 여부를 변경하였습니다.',
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '카테고리 비회원사용자 접근 허용 여부를 변경할 수 없습니다.',
+        error: error.message,
+      });
+    }
+  }
+
+  @ApiOperation({
+    summary: '아티클 카테고리 삭제',
+    description: '아티클 카테고리 삭제',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @UseGuards(JwtAuthGuard)
   @Delete('admin/:id')
-  remove(@Param('id') id: string) {
-    return this.categoryService.remove(+id);
+  async remove(
+    @Param('id') id: number,
+    @UserInfo() user: UserInfoDto,
+    @Res() res: Response
+  ) {
+    try {
+      await this.categoryService.remove(+id, user);
+      return res.status(HttpStatus.OK).json({
+        message: '카테고리를 삭제하였습니다.',
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '카테고리를 삭제할 수 없습니다.',
+        error: error.message,
+      });
+    }
   }
 }
