@@ -21,14 +21,15 @@ export class AuthController {
   @Post('admin/signin')
   async signInAdmin(@Body() dto: AdminSignInDto, @Res() res: Response) {
     try {
-      const token = await this.authService.verifyRoleAdmin(dto);
+      const token = await this.authService.signInAdmin(dto);
       res.setHeader('Authorization', `Bearer ${token}`);
       return res.status(HttpStatus.OK).json({
-        message: '관리자 페이지 로그인 성공',
+        message: '관리자 페이지에 로그인하였습니다',
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        message: `관리자 페이지에 로그인할 수 없습니다. ${error.message}`,
+      return res.status(error.status).json({
+        message: `관리자 페이지에 로그인할 수 없습니다.`,
+        error: error.message,
       });
     }
   }
@@ -47,11 +48,11 @@ export class AuthController {
       const admin = await this.authService.signUpAdmin(dto);
 
       return res.status(HttpStatus.CREATED).json({
-        message: '관리자 계정으로 회원가입하였습니다.',
+        message: '관리자 회원가입을 완료하였습니다.',
         data: admin,
       });
     } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
+      return res.status(error.status).json({
         message: '관리자 회원가입이 불가능합니다.',
         error: error.message,
       });
