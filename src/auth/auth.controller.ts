@@ -25,7 +25,7 @@ export class AuthController {
       res.cookie('authorization', `Bearer ${token}`, {
         httpOnly: true,
         secure: false,
-        sameSite: 'none',
+        sameSite: 'lax',
       });
       return res.status(HttpStatus.OK).json({
         message: '관리자 페이지에 로그인하였습니다',
