@@ -48,10 +48,19 @@ export class CategoryService {
 
   async findUsed() {
     try {
-      return await this.categoryRepository.find({
+      const categories = await this.categoryRepository.find({
         where: { isUsed: true },
         order: { number: 'ASC' },
       });
+      let arr = [];
+      const data = categories.map((category) => {
+        const resDto = {
+          id: category.id,
+          name: category.name,
+        };
+        arr.push(resDto);
+      });
+      return arr;
     } catch (error) {
       throw error;
     }
@@ -114,9 +123,7 @@ export class CategoryService {
         const data = {
           id: category.id,
           name: category.name,
-          number: category.number,
           isUsed: category.isUsed,
-          accessible: category.accessible,
           createdAt: filteredDate,
         };
         arr.push(data);
