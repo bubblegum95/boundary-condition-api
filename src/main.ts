@@ -27,7 +27,7 @@ async function bootstrap() {
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
-    allowedHeaders: 'Content-Type, Authorization',
+    allowedHeaders: 'Content-Type, Authorization, X-Forwarded-For',
   });
   setupSwagger(app);
   // websocket adapter 설정
