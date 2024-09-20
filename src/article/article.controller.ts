@@ -24,6 +24,8 @@ import { Express, Response } from 'express';
 import {
   ApiBody,
   ApiConsumes,
+  ApiExcludeEndpoint,
+  ApiHideProperty,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -72,6 +74,8 @@ export class ArticleController {
     }
   }
 
+  @ApiExcludeEndpoint()
+  @ApiHideProperty()
   @ApiOperation({
     summary: '아티클 생성',
     description: '썸네일 이미지 파일 첨부시',
@@ -177,6 +181,8 @@ export class ArticleController {
     }
   }
 
+  @ApiExcludeEndpoint()
+  @ApiHideProperty()
   @ApiOperation({
     summary: '아티클 수정',
     description: '썸네일 이미지 파일 첨부시',

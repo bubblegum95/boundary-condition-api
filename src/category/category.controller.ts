@@ -16,8 +16,9 @@ import {
   ApiConsumes,
   ApiOkResponse,
   ApiOperation,
-  ApiProduces,
   ApiTags,
+  ApiExcludeEndpoint,
+  ApiHideProperty,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserInfo } from '../utils/user-info.decorator';
@@ -224,6 +225,8 @@ export class CategoryController {
     }
   }
 
+  @ApiExcludeEndpoint()
+  @ApiHideProperty()
   @ApiOperation({
     summary: '아티클 카테고리 비회원 사용자 접근 허용 여부 수정',
     description: '아티클 카테고리 비회원 사용자 접근 허용 여부 수정',
