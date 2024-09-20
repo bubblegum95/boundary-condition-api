@@ -21,13 +21,13 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
-      'https://www.ggair.co.kr',
-      'https://www.api.ggair.co.kr',
+      'https://ggair.co.kr',
+      'https://api.ggair.co.kr',
       'http://localhost:3000',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
-    allowedHeaders: 'Content-Type, Authorization, X-Forwarded-For',
+    allowedHeaders: 'Content-Type, Authorization',
   });
   setupSwagger(app);
   // websocket adapter 설정
