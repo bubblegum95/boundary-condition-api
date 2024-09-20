@@ -19,8 +19,10 @@
 - Language: Typescript, Javascript
 - Framework: Nest.js
 - Database: PostgreSQL
-- Deploy: Vultr VPS, Docker
-- Monitoring: Grafana
+- Deploy: Ubuntu
+- Container: Docker
+- VPS: Vultr
+- Monitoring: Grafana/Loki
 
 ## ⚒️ 주요 기능
 
