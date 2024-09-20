@@ -20,7 +20,11 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: ['http://ggair.co.kr', 'http://localhost:3000'],
+    origin: [
+      'https://www.ggair.co.kr',
+      'https://www.api.ggair.co.kr',
+      'http://localhost:3000',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     allowedHeaders: 'Content-Type, Authorization',
