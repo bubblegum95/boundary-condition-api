@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import AdminSignInDto from './dto/admin-signin.dto';
 import { Response } from 'express';
@@ -19,13 +19,18 @@ export class AuthController {
     type: AdminSignInDto,
   })
   @Post('admin/signin')
-  async signInAdmin(@Body() dto: AdminSignInDto, @Res() res: Response) {
+  async signInAdmin(
+    @Body() dto: AdminSignInDto,
+    @Res() res: Response,
+    @Req() req: Request
+  ) {
     try {
       const token = await this.authService.signInAdmin(dto);
+      // if(req.url)
       res.cookie('authorization', `Bearer ${token}`, {
         httpOnly: true,
         secure: false,
-        sameSite: 'none',
+        sameSite: 'lax',
       });
       return res.status(HttpStatus.OK).json({
         message: '관리자 페이지에 로그인하였습니다',

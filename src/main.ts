@@ -22,7 +22,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'https://www.ggair.co.kr',
-      'https://www.api.ggair.co.kr',
+      // 'https://www.api.ggair.co.kr',
       'http://localhost:3000',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
