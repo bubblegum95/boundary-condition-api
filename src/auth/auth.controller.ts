@@ -26,19 +26,19 @@ export class AuthController {
   ) {
     try {
       const token = await this.authService.signInAdmin(dto);
-      if (req.url === 'http://localhost:3000') {
-        res.cookie('authorization', `Bearer ${token}`, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
-        });
-      } else if (req.url === 'https://www.ggair.co.kr') {
-        res.cookie('authorization', `Bearer ${token}`, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'lax',
-        });
-      }
+      // if (req.url === 'http://localhost:3000') {
+      res.cookie('authorization', `Bearer ${token}`, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+      });
+      // } else if (req.url === 'https://www.ggair.co.kr') {
+      //   res.cookie('authorization', `Bearer ${token}`, {
+      //     httpOnly: true,
+      //     secure: true,
+      //     sameSite: 'lax',
+      //   });
+      // }
       return res.status(HttpStatus.OK).json({
         message: '관리자 페이지에 로그인하였습니다',
       });
