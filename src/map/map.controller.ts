@@ -23,8 +23,15 @@ export class MapController {
         message: '대기질 정보를 조회합니다.',
         data: data,
       });
-    } catch (e) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ message: e.message });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '대기질 정보를 조회할 수 없습니다.',
+        error: error.message,
+      });
     }
   }
 
@@ -42,9 +49,14 @@ export class MapController {
         message: '시군구별 대기질 측정 평균값을 조회합니다.',
         data: data,
       });
-    } catch (e) {
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        message: e.message,
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '시군구별 대기질 측정 평균값을 조회할 수 없습니다.',
+        error: error.message,
       });
     }
   }

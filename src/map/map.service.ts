@@ -274,11 +274,11 @@ export class MapService {
           date: data_time,
           airData: {
             PM10: {
-              data: pm10_value,
+              data: Math.round(pm10_value).toString(),
               grade: pm10_grade,
             },
             PM25: {
-              data: pm25_value,
+              data: Math.round(pm25_value).toString(),
               grade: pm25_grade,
             },
             NO2: {
