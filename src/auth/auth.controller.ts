@@ -24,7 +24,7 @@ export class AuthController {
       const token = await this.authService.signInAdmin(dto);
       res.cookie('authorization', `Bearer ${token}`, {
         httpOnly: true,
-        secure: true,
+        secure: false,
         sameSite: 'lax',
       });
       return res.status(HttpStatus.OK).json({
