@@ -25,14 +25,12 @@ export class AuthController {
     @Req() req: Request
   ) {
     try {
-      const clientIp = req.headers['x-forwarded-for'];
-      console.log('클라이언트 ip: ', clientIp);
       const token = await this.authService.signInAdmin(dto);
       res.cookie('authorization', `Bearer ${token}`, {
         domain: 'localhost:3000',
         httpOnly: true,
         secure: false,
-        sameSite: 'lax',
+        sameSite: 'none',
       });
 
       return res.status(HttpStatus.OK).json({
