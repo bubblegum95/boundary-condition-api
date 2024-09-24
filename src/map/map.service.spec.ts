@@ -189,7 +189,7 @@ describe('MapService', () => {
           name: '성남 관측소',
         },
         {
-          id: 5,
+          id: 6,
           name: '하남 관측소',
         },
       ] as Observatory[],
