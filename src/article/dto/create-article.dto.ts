@@ -5,5 +5,5 @@ export class CreateArticleDto {
   link: string;
   thumbnailId: number;
   categoryId: number;
-  exposable: boolean;
+  isPublic: boolean;
 }

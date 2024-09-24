@@ -33,7 +33,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import FindArticleQueryDto from './dto/find-article-query.dto';
 import UpdateArticleWithImageDto from './dto/update-article-with-image.dto';
-import UpdateExposableDto from './dto/update-exposable.dto';
+import UpdateIsPublicDto from './dto/update-is-public.dto';
 import FindArticlesDto from './dto/find-articles.dto';
 import { SearchArticleQueryDto } from './dto/search-article-query.dto';
 
@@ -219,25 +219,25 @@ export class ArticleController {
   }
 
   @ApiOperation({
-    summary: '아티클 수정',
-    description: '아티클 지도 페이지 노출 허용 여부 수정',
+    summary: '아티클 공개 여부 수정',
+    description: '아티클 공개 여부 수정',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiBody({
-    type: UpdateExposableDto,
+    type: UpdateIsPublicDto,
   })
   @UseGuards(JwtAuthGuard)
-  @Patch('admin/exposable/:id')
-  async updateExposable(
-    @Body() dto: UpdateExposableDto,
+  @Patch('admin/is-public/:id')
+  async updateIsPublic(
+    @Body() dto: UpdateIsPublicDto,
     @Param('id') id: number,
     @UserInfo() user: UserInfoDto,
     @Res() res: Response
   ) {
     try {
-      await this.articleService.updateExposable(user, id, dto);
+      await this.articleService.updateIsPublic(user, id, dto);
       return res.status(HttpStatus.OK).json({
-        message: '아티클 지도노출여부를 수정하였습니다.',
+        message: '아티클 공개여부를 수정하였습니다.',
       });
     } catch (error) {
       let status = error.status;
@@ -245,7 +245,7 @@ export class ArticleController {
         status = HttpStatus.BAD_REQUEST;
       }
       return res.status(status).json({
-        message: '아티클 지도노출여부를 수정할 수 없습니다.',
+        message: '아티클 공개여부를 수정할 수 없습니다.',
         error: error.message,
       });
     }

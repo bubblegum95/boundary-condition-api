@@ -15,9 +15,9 @@ export default class FindArticlesDto {
 
   @ApiProperty({
     example: true,
-    description: '아티클 지도페이지 노출 허용 여부',
+    description: '아티클 공개 허용 허용 여부',
   })
-  exposable: boolean;
+  isPublic: boolean;
 
   @ApiProperty({ example: '0000.00.00', description: '아티클 생성일자' })
   createdAt: string;

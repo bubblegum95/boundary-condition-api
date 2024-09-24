@@ -42,12 +42,12 @@ export default class UpdateArticleWithImageDto {
   @IsBoolean()
   @ApiProperty({
     example: true,
-    description: '아티클 지도 페이지 노출 여부',
+    description: '아티클 공개 여부',
     required: false,
   })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
-  exposable?: boolean;
+  isPublic?: boolean;
 
   @ApiProperty({
     type: 'string',

@@ -33,7 +33,7 @@ export default class Article {
   categoryId: number;
 
   @Column({ type: 'boolean', nullable: false, default: true })
-  exposable: boolean;
+  isPublic: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

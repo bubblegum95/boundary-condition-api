@@ -5,6 +5,6 @@ export default class UpdateArticleDto {
   link: string;
   thumbnailId: number;
   categoryId: number;
-  exposable: boolean;
+  isPublic: boolean;
   createdAt: Date;
 }
