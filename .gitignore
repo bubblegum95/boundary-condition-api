@@ -4,7 +4,7 @@ node_modules
 data-source.ts
 logs
 dist
-
+coverage
 loki
 prometheus
 grafana
