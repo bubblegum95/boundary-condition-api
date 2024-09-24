@@ -72,7 +72,7 @@ export class CategoryController {
     description: '아티클 카테고리 이름 목록 조회',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
-  @Post('list')
+  @Get('list')
   async findCategoryList(@Res() res: Response) {
     try {
       const data = await this.categoryService.findCategoryList();
