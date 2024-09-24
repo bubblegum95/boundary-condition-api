@@ -123,6 +123,8 @@ export class ArticleService {
           id: foundArticle.id,
           title: foundArticle.title,
           subtitle: foundArticle.subtitle,
+          link: foundArticle.link,
+          thumbnail: foundArticle.thumbnail.path,
           category: foundArticle.category.name,
           exposable: foundArticle.exposable,
           createdAt: filteredDate,
