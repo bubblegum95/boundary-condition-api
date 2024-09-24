@@ -590,4 +590,13 @@ export class ArticleService {
       throw error;
     }
   }
+
+  async findCategories() {
+    try {
+      const categories = await this.categoryService.findUsed();
+      return categories;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

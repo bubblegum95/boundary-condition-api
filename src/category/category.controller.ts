@@ -68,31 +68,6 @@ export class CategoryController {
   }
 
   @ApiOperation({
-    summary: '아티클 카테고리 이름 목록 조회',
-    description: '아티클 카테고리 이름 목록 조회',
-  })
-  @ApiConsumes('application/x-www-form-urlencoded')
-  @Get('list')
-  async findCategoryList(@Res() res: Response) {
-    try {
-      const data = await this.categoryService.findCategoryList();
-      return res.status(HttpStatus.CREATED).json({
-        message: '카테고리 이름 목록을 조회합니다.',
-        data,
-      });
-    } catch (error) {
-      let status = error.status;
-      if (!status) {
-        status = HttpStatus.BAD_REQUEST;
-      }
-      return res.status(status).json({
-        message: '카테고리 이름 목록 조회를 할 수 없습니다.',
-        error: error.message,
-      });
-    }
-  }
-
-  @ApiOperation({
     summary: '아티클 카테고리 목록 조회',
     description: '아티클 카테고리 목록 조회',
   })
@@ -106,35 +81,6 @@ export class CategoryController {
   async findAll(@Res() res: Response, @UserInfo() user: UserInfoDto) {
     try {
       const categories = await this.categoryService.findAllForAdmin(user);
-      return res.status(HttpStatus.OK).json({
-        message: '카테고리 목록을 조회합니다.',
-        data: categories,
-      });
-    } catch (error) {
-      let status = error.status;
-      if (!status) {
-        status = HttpStatus.BAD_REQUEST;
-      }
-      return res.status(status).json({
-        message: '카테고리 목록을 조회할 수 없습니다.',
-        error: error.message,
-      });
-    }
-  }
-
-  @ApiOperation({
-    summary: '아티클 카테고리 목록 조회',
-    description: '아티클 카테고리 isUsed: true인 카테고리만 조회',
-  })
-  @ApiConsumes('application/x-www-form-urlencoded')
-  @ApiOkResponse({
-    description: '카테고리 목록을 조회합니다.',
-    type: [FindCategoriesDto],
-  })
-  @Get('is-used')
-  async findPartcial(@Res() res: Response) {
-    try {
-      const categories = await this.categoryService.findUsed();
       return res.status(HttpStatus.OK).json({
         message: '카테고리 목록을 조회합니다.',
         data: categories,

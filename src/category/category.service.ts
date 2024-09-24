@@ -57,12 +57,8 @@ export class CategoryService {
         order: { number: 'ASC' },
       });
       let arr = [];
-      const data = categories.map((category) => {
-        const resDto = {
-          id: category.id,
-          name: category.name,
-        };
-        arr.push(resDto);
+      categories.map((category) => {
+        arr.push(category.name);
       });
       return arr;
     } catch (error) {
