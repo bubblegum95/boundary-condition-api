@@ -68,6 +68,31 @@ export class CategoryController {
   }
 
   @ApiOperation({
+    summary: '아티클 카테고리 이름 목록 조회',
+    description: '아티클 카테고리 이름 목록 조회',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @Post('list')
+  async findCategoryList(@Res() res: Response) {
+    try {
+      const data = await this.categoryService.findCategoryList();
+      return res.status(HttpStatus.CREATED).json({
+        message: '카테고리 이름 목록을 조회합니다.',
+        data,
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '카테고리 이름 목록 조회를 할 수 없습니다.',
+        error: error.message,
+      });
+    }
+  }
+
+  @ApiOperation({
     summary: '아티클 카테고리 목록 조회',
     description: '아티클 카테고리 목록 조회',
   })

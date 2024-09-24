@@ -366,4 +366,17 @@ export class CategoryService {
       throw error;
     }
   }
+
+  async findCategoryList() {
+    try {
+      const categories = await this.findAll();
+      let list = [];
+      for (const category of categories) {
+        list.push(category.name);
+      }
+      return list;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
