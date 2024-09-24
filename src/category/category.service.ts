@@ -242,7 +242,19 @@ export class CategoryService {
         createdAt: foundCategory.createdAt,
       };
       await this.updateCategory(id, updatingData);
-      return true;
+      const datas = await this.findAll();
+      let arr = [];
+      datas.map((category) => {
+        const filteredDate = this.filterDate(category.createdAt);
+        const data = {
+          id: category.id,
+          name: category.name,
+          isUsed: category.isUsed,
+          createdAt: filteredDate,
+        };
+        arr.push(data);
+      });
+      return arr;
     } catch (error) {
       throw error;
     }

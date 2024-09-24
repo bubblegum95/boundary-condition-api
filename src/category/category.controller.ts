@@ -176,9 +176,10 @@ export class CategoryController {
     @Res() res: Response
   ) {
     try {
-      await this.categoryService.updateNumber(+id, dto, user);
+      const data = await this.categoryService.updateNumber(+id, dto, user);
       return res.status(HttpStatus.OK).json({
         message: '카테고리 순번을 변경하였습니다.',
+        data,
       });
     } catch (error) {
       let status = error.status;
