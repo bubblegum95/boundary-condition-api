@@ -344,9 +344,9 @@ export class CategoryService {
       const foundArticles = await this.findArticleWithCategory(
         foundCategory.id
       );
-      if (foundArticles) {
+      if (foundArticles.length !== 0) {
         throw new BadRequestException(
-          `해당 카테고리를 아티클에서 사용중입니다. ID: ${foundArticles}`
+          `해당 카테고리를 아티클에서 사용중입니다.`
         );
       }
       await this.categoryRepository.delete({ id });
