@@ -42,21 +42,21 @@ jobs:
   #     - name: Run tests
   #       run: npm test
 
-   deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Deploy to Vultr "air"
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            # 프로젝트 디렉토리로 이동
-            cd boundary-condition
-            git pull origin main
-            source ./run.sh
+  #  deploy:
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
+  #     - name: Deploy to Vultr "air"
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.HOST }}
+  #         username: ${{ secrets.USERNAME }}
+  #         password: ${{ secrets.SSH_PASSWORD }}
+
+  #         script: |
+  #           # 프로젝트 디렉토리로 이동
+  #           cd boundary-condition
+  #           git pull origin main
+  #           source ./run.sh
