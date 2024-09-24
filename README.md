@@ -21,7 +21,9 @@
 - Database: PostgreSQL
 - Deploy: Ubuntu
 - Container: Docker
-- VPS: Vultr
+- WebServer: Vultr
+- CICD: Git Actions
+- Test: Jest
 - Monitoring: Grafana/Loki
 
 ## ⚒️ 주요 기능
