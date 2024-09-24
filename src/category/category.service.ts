@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -14,13 +15,16 @@ import UpdateCategoryDto from './dto/update-category.dto';
 import UpdateCategoryNumberDto from './dto/update-category-number.dto';
 import UpdateCategoryIsUsedDto from './dto/update-category-isused.dto';
 import UpdateCategoryAccessibleDto from './dto/update-category-accessible.dto';
+import Article from '../article/entities/article.entity';
 
 @Injectable()
 export class CategoryService {
   constructor(
     private readonly userService: UserService,
     @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>
+    private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(Article)
+    private readonly articleRepository: Repository<Article>
   ) {}
 
   filterDate(date: Date) {
@@ -312,6 +316,17 @@ export class CategoryService {
     }
   }
 
+  async findArticleWithCategory(categoryId: number) {
+    try {
+      const articles = await this.articleRepository.find({
+        where: { categoryId },
+      });
+      return articles.filter((article) => article.id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async remove(id: number, user: UserInfoDto) {
     try {
       const { email, roles } = user;
@@ -325,6 +340,14 @@ export class CategoryService {
       const foundCategory = await this.findOneById(id);
       if (!foundCategory) {
         throw new NotFoundException('선택하신 카테고리는 존재하지 않습니다.');
+      }
+      const foundArticles = await this.findArticleWithCategory(
+        foundCategory.id
+      );
+      if (foundArticles) {
+        throw new BadRequestException(
+          `해당 카테고리를 아티클에서 사용중입니다. ID: ${foundArticles}`
+        );
       }
       await this.categoryRepository.delete({ id });
     } catch (error) {
