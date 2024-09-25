@@ -1,15 +1,8 @@
 import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
 import { MapService } from './map.service';
 import { LocationInfoDto } from './dto/locationInfo.dto';
-import {
-  ApiConsumes,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import ReturnFindPollutionDataDto from './resDto/find-pollution-data.dto';
-import ReturnFindAverageDataDto from './resDto/find-average-data.dto';
 
 @ApiTags('Map')
 @Controller('map')
@@ -21,17 +14,13 @@ export class MapController {
     summary: '대기질 측정 정보 조회',
     description: '측정소별 대기질 측정 정보 조회',
   })
-  @ApiOkResponse({
-    description: '대기질 측정 정보 조회',
-    type: ReturnFindPollutionDataDto,
-  })
   @Get('pollution')
   async getPollutionInfo(@Res() res: Response, @Query() dto: LocationInfoDto) {
     try {
       console.log('dto: ', dto);
       const data = await this.mapService.getPollutionInformation(dto);
       return res.status(HttpStatus.OK).json({
-        message: '실시간 대기질 정보를 조회합니다.',
+        message: '대기질 정보를 조회합니다.',
         data: data,
       });
     } catch (error) {
@@ -51,7 +40,6 @@ export class MapController {
     summary: '대기질 측정 정보 조회',
     description: '시군구별 대기질 측정 평균값 정보 조회',
   })
-  @ApiOkResponse({ type: ReturnFindAverageDataDto })
   @Get('average')
   async getAverage(@Res() res: Response) {
     try {

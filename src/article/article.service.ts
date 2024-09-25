@@ -59,17 +59,6 @@ export class ArticleService {
     }
   }
 
-  async findArticle(id: number) {
-    try {
-      return await this.articleRepository.findOne({
-        where: { id },
-        relations: ['category', 'thumbnail'],
-      });
-    } catch (error) {
-      throw error;
-    }
-  }
-
   async findCategoryByName(name: string) {
     try {
       return await this.categoryService.findOneByName(name);
@@ -118,23 +107,6 @@ export class ArticleService {
     }
   }
 
-  async findOneForAdmin(id: number, user: UserInfoDto) {
-    try {
-      let foundArticle = await this.findArticle(id);
-      return {
-        id: foundArticle.id,
-        title: foundArticle.title,
-        subtitle: foundArticle.subtitle,
-        link: foundArticle.link,
-        thumbnail: foundArticle.thumbnail.path,
-        category: foundArticle.category.name,
-        isPublic: foundArticle.isPublic,
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
-
   async findAllArticlesForAdmin(query: FindArticleQueryDto) {
     try {
       const { limit, page } = query;
@@ -151,6 +123,8 @@ export class ArticleService {
           id: foundArticle.id,
           title: foundArticle.title,
           subtitle: foundArticle.subtitle,
+          link: foundArticle.link,
+          thumbnail: foundArticle.thumbnail.path,
           category: foundArticle.category.name,
           isPublic: foundArticle.isPublic,
           createdAt: filteredDate,
@@ -379,6 +353,9 @@ export class ArticleService {
         categoryId = foundArticle.categoryId;
       } else {
         const foundCategory = await this.findCategoryByName(category);
+        if (!foundCategory) {
+          throw new BadRequestException('해당 카테고리를 찾을 수 없습니다.');
+        }
         categoryId = foundCategory.id;
       }
       const savingArticle = {
@@ -401,8 +378,6 @@ export class ArticleService {
     } catch (error) {
       queryRunner.rollbackTransaction();
       throw error;
-    } finally {
-      queryRunner.release();
     }
   }
 
@@ -447,6 +422,9 @@ export class ArticleService {
         categoryId = foundArticle.categoryId;
       } else {
         const foundCategory = await this.findCategoryByName(category);
+        if (!foundCategory) {
+          throw new BadRequestException('해당 카테고리를 찾을 수 없습니다.');
+        }
         categoryId = foundCategory.id;
       }
       const savedImage = await this.saveThumbnailImage(image);
