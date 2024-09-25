@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -27,6 +28,6 @@ export default class Category {
   @CreateDateColumn()
   createdAt: Date;
 
-  @OneToOne(() => Article, (article) => article.category)
+  @ManyToOne(() => Article, (article) => article.category)
   article: Article;
 }

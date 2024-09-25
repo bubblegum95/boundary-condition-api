@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -29,7 +30,7 @@ export default class Article {
   @Column({ type: 'int', nullable: true })
   thumbnailId: number;
 
-  @Column({ type: 'int', nullable: false })
+  @Column({ type: 'int', nullable: false, unique: false })
   categoryId: number;
 
   @Column({ type: 'boolean', nullable: false, default: true })
@@ -38,11 +39,11 @@ export default class Article {
   @CreateDateColumn()
   createdAt: Date;
 
-  @OneToOne(() => Thumbnail, (thumbnail) => thumbnail.article)
+  @OneToMany(() => Thumbnail, (thumbnail) => thumbnail.article)
   @JoinColumn({ name: 'thumbnail_id' })
   thumbnail: Thumbnail;
 
-  @OneToOne(() => Category, (category) => category.article)
+  @OneToMany(() => Category, (category) => category.article)
   @JoinColumn({ name: 'category_id' })
   category: Category;
 }
