@@ -8,20 +8,28 @@
 
 ## 💁‍♀️ 서비스 아키텍처
 
+## 💎 ERD
+
+[web-app | DrawSQL](https://drawsql.app/teams/-1656/diagrams/web-app)
+
 ## 🎮 개발 환경
 
 - Runtime: Node.js
 - Language: Typescript, Javascript
 - Framework: Nest.js
 - Database: PostgreSQL
-- Deploy: Ubuntu
-- Container: Docker
+- OS: Ubuntu
 - WebServer: Vultr
 - CICD: Git Actions
 - Test: Jest
+
+## 🎮 추후 시도할 것
+
+- Container: Docker
 - Monitoring: Grafana/Loki
 
 ## ⚒️ 주요 기능
 
 - 지도 위치 정보에 따른 대기오염 및 기상 정보 수집 및 확인
 - 관리자 페이지(로그인, 카테고리, 아티클)
+- 사용자 페이지(아티클)
