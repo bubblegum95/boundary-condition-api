@@ -57,12 +57,8 @@ export class CategoryService {
         order: { number: 'ASC' },
       });
       let arr = [];
-      const data = categories.map((category) => {
-        const resDto = {
-          id: category.id,
-          name: category.name,
-        };
-        arr.push(resDto);
+      categories.map((category) => {
+        arr.push(category.name);
       });
       return arr;
     } catch (error) {
@@ -242,7 +238,19 @@ export class CategoryService {
         createdAt: foundCategory.createdAt,
       };
       await this.updateCategory(id, updatingData);
-      return true;
+      const datas = await this.findAll();
+      let arr = [];
+      datas.map((category) => {
+        const filteredDate = this.filterDate(category.createdAt);
+        const data = {
+          id: category.id,
+          name: category.name,
+          isUsed: category.isUsed,
+          createdAt: filteredDate,
+        };
+        arr.push(data);
+      });
+      return arr;
     } catch (error) {
       throw error;
     }
@@ -350,6 +358,19 @@ export class CategoryService {
         );
       }
       await this.categoryRepository.delete({ id });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findCategoryList() {
+    try {
+      const categories = await this.findAll();
+      let list = [];
+      for (const category of categories) {
+        list.push(category.name);
+      }
+      return list;
     } catch (error) {
       throw error;
     }

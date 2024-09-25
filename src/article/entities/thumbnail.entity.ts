@@ -1,4 +1,4 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import Article from './article.entity';
 
 @Entity({ name: 'thumbnail' })
@@ -9,6 +9,6 @@ export default class Thumbnail {
   @Column({ type: 'varchar', nullable: false })
   path: string;
 
-  @OneToOne(() => Article, (article) => article.thumbnail)
-  article: Article;
+  @ManyToOne(() => Article, (article) => article.thumbnail)
+  article: Article[];
 }

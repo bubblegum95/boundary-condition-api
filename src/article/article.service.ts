@@ -20,7 +20,7 @@ import FindArticleQueryDto from './dto/find-article-query.dto';
 import UpdateArticleWithImageDto from './dto/update-article-with-image.dto';
 import UpdateArticleDto from './dto/update-article.dto';
 import { CategoryService } from '../category/category.service';
-import UpdateExposableDto from './dto/update-exposable.dto';
+import UpdateIsPublicDto from './dto/update-is-public.dto';
 import { SearchArticleQueryDto } from './dto/search-article-query.dto';
 
 @Injectable()
@@ -90,7 +90,7 @@ export class ArticleService {
         thumbnailId,
         link,
         categoryId,
-        exposable,
+        isPublic,
       } = dto;
       return await queryRunner.manager.save(Article, {
         userId,
@@ -99,7 +99,7 @@ export class ArticleService {
         thumbnailId,
         link,
         categoryId,
-        exposable,
+        isPublic,
       });
     } catch (error) {
       throw error;
@@ -109,7 +109,7 @@ export class ArticleService {
   async findAllArticlesForAdmin(query: FindArticleQueryDto) {
     try {
       const { limit, page } = query;
-      const foundArticles = await this.articleRepository.find({
+      let foundArticles = await this.articleRepository.find({
         relations: ['category', 'thumbnail'],
         skip: (page - 1) * limit,
         take: limit,
@@ -122,8 +122,10 @@ export class ArticleService {
           id: foundArticle.id,
           title: foundArticle.title,
           subtitle: foundArticle.subtitle,
+          link: foundArticle.link,
+          thumbnail: foundArticle.thumbnail.path,
           category: foundArticle.category.name,
-          exposable: foundArticle.exposable,
+          isPublic: foundArticle.isPublic,
           createdAt: filteredDate,
         };
         articleArr.push(article);
@@ -143,7 +145,7 @@ export class ArticleService {
     await queryRunner.startTransaction();
 
     try {
-      const { title, subtitle, thumbnail, link, category, exposable } = dto;
+      const { title, subtitle, thumbnail, link, category, isPublic } = dto;
       const { email, roles } = user;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
@@ -167,7 +169,7 @@ export class ArticleService {
         thumbnailId: savedThumbnail.id,
         link,
         categoryId: foundCategory.id,
-        exposable,
+        isPublic,
       };
       const savedArticle = await this.saveArticle(articleDto, queryRunner);
       if (!savedArticle) {
@@ -193,7 +195,7 @@ export class ArticleService {
     await queryRunner.startTransaction();
 
     try {
-      const { title, subtitle, link, category, exposable } = dto;
+      const { title, subtitle, link, category, isPublic } = dto;
       const { email, roles } = user;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
@@ -221,7 +223,7 @@ export class ArticleService {
         thumbnailId: savedThumbnail.id,
         link,
         categoryId: foundCategory.id,
-        exposable,
+        isPublic,
       };
       const savedArticle = await this.saveArticle(articleDto, queryRunner);
       if (!savedArticle) {
@@ -274,7 +276,7 @@ export class ArticleService {
         thumbnailId,
         link,
         categoryId,
-        exposable,
+        isPublic,
         createdAt,
       } = dto;
 
@@ -287,7 +289,7 @@ export class ArticleService {
           thumbnailId,
           link,
           categoryId,
-          exposable,
+          isPublic,
           createdAt,
         },
       });
@@ -296,9 +298,9 @@ export class ArticleService {
     }
   }
 
-  async findExposibleArticle() {
+  async findUsingArticle() {
     try {
-      return await this.articleRepository.find({ where: { exposable: true } });
+      return await this.articleRepository.find({ where: { isPublic: true } });
     } catch (error) {
       throw error;
     }
@@ -315,7 +317,7 @@ export class ArticleService {
 
     try {
       const { email, roles } = user;
-      let { title, subtitle, link, thumbnail, category, exposable } = dto;
+      let { title, subtitle, link, thumbnail, category, isPublic } = dto;
       let thumbnailId = 0;
       let categoryId = 0;
       const foundUser = await this.userService.findUserbyEmail(email);
@@ -338,18 +340,21 @@ export class ArticleService {
       if (!link) {
         link = foundArticle.link;
       }
-      if (!exposable) {
-        exposable = foundArticle.exposable;
+      if (!isPublic) {
+        isPublic = foundArticle.isPublic;
       }
-      if (!thumbnail) {
-        thumbnailId = foundArticle.thumbnail.id;
-      } else {
+      if (thumbnail) {
         thumbnailId = (await this.createThumbnail(thumbnail, queryRunner)).id;
+      } else if (!thumbnail) {
+        thumbnailId = foundArticle.thumbnail.id;
       }
       if (!category) {
         categoryId = foundArticle.categoryId;
       } else {
         const foundCategory = await this.findCategoryByName(category);
+        if (!foundCategory) {
+          throw new BadRequestException('해당 카테고리를 찾을 수 없습니다.');
+        }
         categoryId = foundCategory.id;
       }
       const savingArticle = {
@@ -359,7 +364,7 @@ export class ArticleService {
         link,
         thumbnailId,
         categoryId,
-        exposable,
+        isPublic,
         createdAt: foundArticle.createdAt,
       };
       const updatedData = await this.updateArticle(
@@ -372,8 +377,6 @@ export class ArticleService {
     } catch (error) {
       queryRunner.rollbackTransaction();
       throw error;
-    } finally {
-      queryRunner.release();
     }
   }
 
@@ -389,7 +392,7 @@ export class ArticleService {
 
     try {
       const { email, roles } = user;
-      let { title, subtitle, link, category, exposable } = dto;
+      let { title, subtitle, link, category, isPublic } = dto;
       let categoryId = 0;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
@@ -411,13 +414,16 @@ export class ArticleService {
       if (!link) {
         link = foundArticle.link;
       }
-      if (!exposable) {
-        exposable = foundArticle.exposable;
+      if (!isPublic) {
+        isPublic = foundArticle.isPublic;
       }
       if (!category) {
         categoryId = foundArticle.categoryId;
       } else {
         const foundCategory = await this.findCategoryByName(category);
+        if (!foundCategory) {
+          throw new BadRequestException('해당 카테고리를 찾을 수 없습니다.');
+        }
         categoryId = foundCategory.id;
       }
       const savedImage = await this.saveThumbnailImage(image);
@@ -432,7 +438,7 @@ export class ArticleService {
         link,
         thumbnailId: savedthumbnail.id,
         categoryId,
-        exposable,
+        isPublic,
         createdAt: foundArticle.createdAt,
       };
 
@@ -450,18 +456,14 @@ export class ArticleService {
     }
   }
 
-  async updateExposable(
-    user: UserInfoDto,
-    id: number,
-    dto: UpdateExposableDto
-  ) {
+  async updateIsPublic(user: UserInfoDto, id: number, dto: UpdateIsPublicDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       const { email, roles } = user;
-      const { exposable } = dto;
+      const { isPublic } = dto;
       const foundUser = await this.userService.findUserbyEmail(email);
       if (!foundUser) {
         throw new NotFoundException('해당 계정이 존재하지 않습니다.');
@@ -480,7 +482,7 @@ export class ArticleService {
         link: foundArticle.link,
         thumbnailId: foundArticle.thumbnailId,
         categoryId: foundArticle.categoryId,
-        exposable,
+        isPublic,
         createdAt: foundArticle.createdAt,
       };
       await this.updateArticle(id, newDto, queryRunner);
@@ -562,7 +564,7 @@ export class ArticleService {
 
   async findInMap() {
     try {
-      const articles = await this.articleRepository.find({
+      let articles = await this.articleRepository.find({
         relations: ['category', 'thumbnail'],
         take: 2,
         order: { id: 'DESC' },
@@ -582,6 +584,15 @@ export class ArticleService {
         data.push(newData);
       });
       return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findCategories() {
+    try {
+      const categories = await this.categoryService.findUsed();
+      return categories;
     } catch (error) {
       throw error;
     }

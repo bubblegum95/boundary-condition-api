@@ -33,9 +33,11 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import FindArticleQueryDto from './dto/find-article-query.dto';
 import UpdateArticleWithImageDto from './dto/update-article-with-image.dto';
-import UpdateExposableDto from './dto/update-exposable.dto';
-import FindArticlesDto from './dto/find-articles.dto';
+import UpdateIsPublicDto from './dto/update-is-public.dto';
 import { SearchArticleQueryDto } from './dto/search-article-query.dto';
+import ReturnFindArticleAdminDto from './resDto/find-articles-admin.dto';
+import ReturnFindArticleDto from './resDto/find-articles.dto';
+import ReturnFindCategoryListDto from './resDto/find-category-list.dto';
 
 @ApiTags('Article')
 @Controller('articles')
@@ -117,7 +119,7 @@ export class ArticleController {
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOkResponse({
     description: '아티클 목록을 조회합니다.',
-    type: [FindArticlesDto],
+    type: ReturnFindArticleAdminDto,
   })
   @UseGuards(JwtAuthGuard)
   @Get('admin')
@@ -161,11 +163,12 @@ export class ArticleController {
     @Res() res: Response
   ) {
     try {
-      const data = this.articleService.updateArticleWithLink(
+      const data = await this.articleService.updateArticleWithLink(
         +id,
         updateArticleDto,
         user
       );
+
       return res.status(HttpStatus.OK).json({
         message: '아티클 수정을 완료하였습니다.',
       });
@@ -219,25 +222,25 @@ export class ArticleController {
   }
 
   @ApiOperation({
-    summary: '아티클 수정',
-    description: '아티클 지도 페이지 노출 허용 여부 수정',
+    summary: '아티클 공개 여부 수정',
+    description: '아티클 공개 여부 수정',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiBody({
-    type: UpdateExposableDto,
+    type: UpdateIsPublicDto,
   })
   @UseGuards(JwtAuthGuard)
-  @Patch('admin/exposable/:id')
-  async updateExposable(
-    @Body() dto: UpdateExposableDto,
+  @Patch('admin/is-public/:id')
+  async updateIsPublic(
+    @Body() dto: UpdateIsPublicDto,
     @Param('id') id: number,
     @UserInfo() user: UserInfoDto,
     @Res() res: Response
   ) {
     try {
-      await this.articleService.updateExposable(user, id, dto);
+      await this.articleService.updateIsPublic(user, id, dto);
       return res.status(HttpStatus.OK).json({
-        message: '아티클 지도노출여부를 수정하였습니다.',
+        message: '아티클 공개여부를 수정하였습니다.',
       });
     } catch (error) {
       let status = error.status;
@@ -245,7 +248,7 @@ export class ArticleController {
         status = HttpStatus.BAD_REQUEST;
       }
       return res.status(status).json({
-        message: '아티클 지도노출여부를 수정할 수 없습니다.',
+        message: '아티클 공개여부를 수정할 수 없습니다.',
         error: error.message,
       });
     }
@@ -286,6 +289,10 @@ export class ArticleController {
     description: '아티클 카테고리 및 키워드 조회',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '아티클 목록을 조회합니다.',
+    type: ReturnFindArticleDto,
+  })
   @Get()
   async findAllForUser(
     @Query() dto: SearchArticleQueryDto,
@@ -314,6 +321,10 @@ export class ArticleController {
     description: '지도페이지 내 아티클 조회',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '아티클 목록을 조회합니다.',
+    type: ReturnFindArticleDto,
+  })
   @Get('map')
   async findInMap(@Res() res: Response) {
     try {
@@ -329,6 +340,35 @@ export class ArticleController {
       }
       return res.status(status).json({
         message: '아티클을 조회할 수 없습니다.',
+        error: error.message,
+      });
+    }
+  }
+
+  @ApiOperation({
+    summary: '아티클 카테고리 isUsed: true인 카테고리 목록 조회',
+    description: '아티클 카테고리 isUsed: true인 카테고리만 조회',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '카테고리 목록을 조회합니다.',
+    type: ReturnFindCategoryListDto,
+  })
+  @Get('categories')
+  async findPartcial(@Res() res: Response) {
+    try {
+      const categories = await this.articleService.findCategories();
+      return res.status(HttpStatus.OK).json({
+        message: '카테고리 목록을 조회합니다.',
+        data: categories,
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '카테고리 목록을 조회할 수 없습니다.',
         error: error.message,
       });
     }

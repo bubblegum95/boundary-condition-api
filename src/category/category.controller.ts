@@ -28,7 +28,7 @@ import { Response } from 'express';
 import UpdateCategoryNumberDto from './dto/update-category-number.dto';
 import UpdateCategoryIsUsedDto from './dto/update-category-isused.dto';
 import UpdateCategoryAccessibleDto from './dto/update-category-accessible.dto';
-import FindCategoriesDto from './dto/find-categories.dto';
+import ReturnFindCategoryDto from './resDto/return-find-categories.dto';
 
 @ApiTags('Category')
 @Controller('categories')
@@ -74,42 +74,13 @@ export class CategoryController {
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOkResponse({
     description: '카테고리 목록을 조회합니다.',
-    type: [FindCategoriesDto],
+    type: ReturnFindCategoryDto,
   })
   @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(@Res() res: Response, @UserInfo() user: UserInfoDto) {
     try {
       const categories = await this.categoryService.findAllForAdmin(user);
-      return res.status(HttpStatus.OK).json({
-        message: '카테고리 목록을 조회합니다.',
-        data: categories,
-      });
-    } catch (error) {
-      let status = error.status;
-      if (!status) {
-        status = HttpStatus.BAD_REQUEST;
-      }
-      return res.status(status).json({
-        message: '카테고리 목록을 조회할 수 없습니다.',
-        error: error.message,
-      });
-    }
-  }
-
-  @ApiOperation({
-    summary: '아티클 카테고리 목록 조회',
-    description: '아티클 카테고리 isUsed: true인 카테고리만 조회',
-  })
-  @ApiConsumes('application/x-www-form-urlencoded')
-  @ApiOkResponse({
-    description: '카테고리 목록을 조회합니다.',
-    type: [FindCategoriesDto],
-  })
-  @Get('is-used')
-  async findPartcial(@Res() res: Response) {
-    try {
-      const categories = await this.categoryService.findUsed();
       return res.status(HttpStatus.OK).json({
         message: '카테고리 목록을 조회합니다.',
         data: categories,
@@ -176,9 +147,10 @@ export class CategoryController {
     @Res() res: Response
   ) {
     try {
-      await this.categoryService.updateNumber(+id, dto, user);
+      const data = await this.categoryService.updateNumber(+id, dto, user);
       return res.status(HttpStatus.OK).json({
         message: '카테고리 순번을 변경하였습니다.',
+        data,
       });
     } catch (error) {
       let status = error.status;

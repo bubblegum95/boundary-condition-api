@@ -44,11 +44,11 @@ export class CreateArticleWithLinkDto {
   category: string;
 
   @IsBoolean()
-  @IsNotEmpty({ message: '아티클 지도페이지 노출 여부를 선택해주세요.' })
+  @IsNotEmpty({ message: '아티클 공개 허용 여부를 선택해주세요.' })
   @Transform(({ value }) => value === 'true' || value === true)
   @ApiProperty({
     example: true,
-    description: '아티클 지도페이지 노출 여부',
+    description: '아티클 공개 허용 여부',
   })
-  exposable: boolean;
+  isPublic: boolean;
 }

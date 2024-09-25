@@ -3,6 +3,8 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -29,20 +31,20 @@ export default class Article {
   @Column({ type: 'int', nullable: true })
   thumbnailId: number;
 
-  @Column({ type: 'int', nullable: false })
+  @Column({ type: 'int', nullable: false, unique: false })
   categoryId: number;
 
   @Column({ type: 'boolean', nullable: false, default: true })
-  exposable: boolean;
+  isPublic: boolean;
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @OneToOne(() => Thumbnail, (thumbnail) => thumbnail.article)
+  @ManyToOne(() => Thumbnail, (thumbnail) => thumbnail.article)
   @JoinColumn({ name: 'thumbnail_id' })
   thumbnail: Thumbnail;
 
-  @OneToOne(() => Category, (category) => category.article)
+  @ManyToOne(() => Category, (category) => category.article)
   @JoinColumn({ name: 'category_id' })
   category: Category;
 }
