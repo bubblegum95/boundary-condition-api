@@ -146,6 +146,40 @@ export class ArticleController {
   }
 
   @ApiOperation({
+    summary: '관리자 아티클 단일 조회',
+    description: '관리자 아티클 목록 조회',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '아티클을 조회합니다.',
+    type: ReturnFindArticleDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/:id')
+  async findOne(
+    @Res() res: Response,
+    @Param('id') id: number,
+    @UserInfo() user: UserInfoDto
+  ) {
+    try {
+      const article = await this.articleService.findOneForAdmin(id, user);
+      return res.status(HttpStatus.OK).json({
+        message: '아티클을 조회합니다.',
+        data: article,
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '아티클을 조회할 수 없습니다.',
+        error: error.message,
+      });
+    }
+  }
+
+  @ApiOperation({
     summary: '아티클 수정',
     description: '썸네일 이미지 링크 삽입시',
   })
