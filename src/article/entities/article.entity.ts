@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -39,11 +40,11 @@ export default class Article {
   @CreateDateColumn()
   createdAt: Date;
 
-  @OneToMany(() => Thumbnail, (thumbnail) => thumbnail.article)
+  @ManyToOne(() => Thumbnail, (thumbnail) => thumbnail.article)
   @JoinColumn({ name: 'thumbnail_id' })
   thumbnail: Thumbnail;
 
-  @OneToMany(() => Category, (category) => category.article)
+  @ManyToOne(() => Category, (category) => category.article)
   @JoinColumn({ name: 'category_id' })
   category: Category;
 }

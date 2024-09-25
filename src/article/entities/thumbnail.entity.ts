@@ -16,5 +16,5 @@ export default class Thumbnail {
   path: string;
 
   @ManyToOne(() => Article, (article) => article.thumbnail)
-  article: Article;
+  article: Article[];
 }
