@@ -34,9 +34,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import FindArticleQueryDto from './dto/find-article-query.dto';
 import UpdateArticleWithImageDto from './dto/update-article-with-image.dto';
 import UpdateIsPublicDto from './dto/update-is-public.dto';
-import FindArticlesDto from './resDto/find-articles.dto';
 import { SearchArticleQueryDto } from './dto/search-article-query.dto';
-import FindCategoryListDto from './resDto/find-category-list.dto';
+import ReturnFindArticleDto from './resDto/return-find-article.dto';
+import ReturnFindCategoryListDto from './resDto/return-find-category-list.dto';
 
 @ApiTags('Article')
 @Controller('articles')
@@ -118,7 +118,7 @@ export class ArticleController {
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOkResponse({
     description: '아티클 목록을 조회합니다.',
-    type: [FindArticlesDto],
+    type: ReturnFindArticleDto,
   })
   @UseGuards(JwtAuthGuard)
   @Get('admin')
@@ -140,6 +140,40 @@ export class ArticleController {
       }
       return res.status(status).json({
         message: '아티클 목록을 조회할 수 없습니다.',
+        error: error.message,
+      });
+    }
+  }
+
+  @ApiOperation({
+    summary: '관리자 아티클 단일 조회',
+    description: '관리자 아티클 목록 조회',
+  })
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '아티클을 조회합니다.',
+    type: ReturnFindArticleDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/:id')
+  async findOne(
+    @Res() res: Response,
+    @Param('id') id: number,
+    @UserInfo() user: UserInfoDto
+  ) {
+    try {
+      const article = await this.articleService.findOneForAdmin(id, user);
+      return res.status(HttpStatus.OK).json({
+        message: '아티클을 조회합니다.',
+        data: article,
+      });
+    } catch (error) {
+      let status = error.status;
+      if (!status) {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      return res.status(status).json({
+        message: '아티클을 조회할 수 없습니다.',
         error: error.message,
       });
     }
@@ -289,7 +323,7 @@ export class ArticleController {
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOkResponse({
     description: '아티클 목록을 조회합니다.',
-    type: [FindArticlesDto],
+    type: ReturnFindArticleDto,
   })
   @Get()
   async findAllForUser(
@@ -321,7 +355,7 @@ export class ArticleController {
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOkResponse({
     description: '아티클 목록을 조회합니다.',
-    type: [FindArticlesDto],
+    type: ReturnFindArticleDto,
   })
   @Get('map')
   async findInMap(@Res() res: Response) {
@@ -350,7 +384,7 @@ export class ArticleController {
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOkResponse({
     description: '카테고리 목록을 조회합니다.',
-    type: [FindCategoryListDto],
+    type: ReturnFindCategoryListDto,
   })
   @Get('categories')
   async findPartcial(@Res() res: Response) {
