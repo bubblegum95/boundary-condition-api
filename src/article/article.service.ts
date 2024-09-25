@@ -344,10 +344,10 @@ export class ArticleService {
       if (!isPublic) {
         isPublic = foundArticle.isPublic;
       }
-      if (!thumbnail) {
-        thumbnailId = foundArticle.thumbnail.id;
-      } else {
+      if (thumbnail) {
         thumbnailId = (await this.createThumbnail(thumbnail, queryRunner)).id;
+      } else if (!thumbnail) {
+        thumbnailId = foundArticle.thumbnail.id;
       }
       if (!category) {
         categoryId = foundArticle.categoryId;
