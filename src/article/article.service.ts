@@ -110,7 +110,7 @@ export class ArticleService {
   async findAllArticlesForAdmin(query: FindArticleQueryDto) {
     try {
       const { limit, page } = query;
-      const foundArticles = await this.articleRepository.find({
+      let foundArticles = await this.articleRepository.find({
         relations: ['category', 'thumbnail'],
         skip: (page - 1) * limit,
         take: limit,
@@ -562,7 +562,7 @@ export class ArticleService {
 
   async findInMap() {
     try {
-      const articles = await this.articleRepository.find({
+      let articles = await this.articleRepository.find({
         relations: ['category', 'thumbnail'],
         take: 2,
         order: { id: 'DESC' },
