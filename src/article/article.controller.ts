@@ -35,8 +35,9 @@ import FindArticleQueryDto from './dto/find-article-query.dto';
 import UpdateArticleWithImageDto from './dto/update-article-with-image.dto';
 import UpdateIsPublicDto from './dto/update-is-public.dto';
 import { SearchArticleQueryDto } from './dto/search-article-query.dto';
-import ReturnFindArticleDto from './resDto/return-find-article.dto';
-import ReturnFindCategoryListDto from './resDto/return-find-category-list.dto';
+import ReturnFindArticleAdminDto from './resDto/find-articles-admin.dto';
+import ReturnFindArticleDto from './resDto/find-articles.dto';
+import ReturnFindCategoryListDto from './resDto/find-category-list.dto';
 
 @ApiTags('Article')
 @Controller('articles')
@@ -118,7 +119,7 @@ export class ArticleController {
   @ApiConsumes('application/x-www-form-urlencoded')
   @ApiOkResponse({
     description: '아티클 목록을 조회합니다.',
-    type: ReturnFindArticleDto,
+    type: ReturnFindArticleAdminDto,
   })
   @UseGuards(JwtAuthGuard)
   @Get('admin')
@@ -196,11 +197,12 @@ export class ArticleController {
     @Res() res: Response
   ) {
     try {
-      const data = this.articleService.updateArticleWithLink(
+      const data = await this.articleService.updateArticleWithLink(
         +id,
         updateArticleDto,
         user
       );
+
       return res.status(HttpStatus.OK).json({
         message: '아티클 수정을 완료하였습니다.',
       });

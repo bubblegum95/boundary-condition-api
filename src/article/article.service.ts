@@ -379,6 +379,9 @@ export class ArticleService {
         categoryId = foundArticle.categoryId;
       } else {
         const foundCategory = await this.findCategoryByName(category);
+        if (!foundCategory) {
+          throw new BadRequestException('해당 카테고리를 찾을 수 없습니다.');
+        }
         categoryId = foundCategory.id;
       }
       const savingArticle = {
@@ -401,8 +404,6 @@ export class ArticleService {
     } catch (error) {
       queryRunner.rollbackTransaction();
       throw error;
-    } finally {
-      queryRunner.release();
     }
   }
 

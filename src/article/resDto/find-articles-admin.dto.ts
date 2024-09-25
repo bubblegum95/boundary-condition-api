@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class FindArticlesDto {
+export class FindArticlesAdminDto {
   @ApiProperty({ example: 1, description: '아티클 ID' })
   id: number;
 
@@ -9,15 +9,6 @@ export class FindArticlesDto {
 
   @ApiProperty({ example: 'subtitle', description: '아티클 부제목' })
   subtitle: string;
-
-  @ApiProperty({ example: 'link', description: 'url' })
-  link: string;
-
-  @ApiProperty({
-    example: 'thumbnail url',
-    description: '아티클 썸네일 이미지 url',
-  })
-  thumbnail: string;
 
   @ApiProperty({ example: 'Category', description: '아티클 카테고리 이름' })
   category: string;
@@ -32,13 +23,13 @@ export class FindArticlesDto {
   createdAt: string;
 }
 
-export default class ReturnFindArticleDto {
+export default class ReturnFindArticleAdminDto {
   @ApiProperty({
     example: '아티클을 조회합니다.',
     description: 'response ok message',
   })
   message: string;
 
-  @ApiProperty({ type: [FindArticlesDto] })
-  data: FindArticlesDto[];
+  @ApiProperty({ type: [FindArticlesAdminDto] })
+  data: FindArticlesAdminDto[];
 }
