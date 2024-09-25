@@ -34,8 +34,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import FindArticleQueryDto from './dto/find-article-query.dto';
 import UpdateArticleWithImageDto from './dto/update-article-with-image.dto';
 import UpdateIsPublicDto from './dto/update-is-public.dto';
-import FindArticlesDto from './dto/find-articles.dto';
+import FindArticlesDto from './resDto/find-articles.dto';
 import { SearchArticleQueryDto } from './dto/search-article-query.dto';
+import FindCategoryListDto from './resDto/find-category-list.dto';
 
 @ApiTags('Article')
 @Controller('articles')
@@ -286,6 +287,10 @@ export class ArticleController {
     description: '아티클 카테고리 및 키워드 조회',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '아티클 목록을 조회합니다.',
+    type: [FindArticlesDto],
+  })
   @Get()
   async findAllForUser(
     @Query() dto: SearchArticleQueryDto,
@@ -314,6 +319,10 @@ export class ArticleController {
     description: '지도페이지 내 아티클 조회',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '아티클 목록을 조회합니다.',
+    type: [FindArticlesDto],
+  })
   @Get('map')
   async findInMap(@Res() res: Response) {
     try {
@@ -339,6 +348,10 @@ export class ArticleController {
     description: '아티클 카테고리 isUsed: true인 카테고리만 조회',
   })
   @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOkResponse({
+    description: '카테고리 목록을 조회합니다.',
+    type: [FindCategoryListDto],
+  })
   @Get('categories')
   async findPartcial(@Res() res: Response) {
     try {

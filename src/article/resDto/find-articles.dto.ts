@@ -10,6 +10,15 @@ export default class FindArticlesDto {
   @ApiProperty({ example: 'subtitle', description: '아티클 부제목' })
   subtitle: string;
 
+  @ApiProperty({ example: 'link', description: 'url' })
+  link: string;
+
+  @ApiProperty({
+    example: 'thumbnail url',
+    description: '아티클 썸네일 이미지 url',
+  })
+  thumbnail: string;
+
   @ApiProperty({ example: 'Category', description: '아티클 카테고리 이름' })
   category: string;
 
