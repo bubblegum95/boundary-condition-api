@@ -81,6 +81,17 @@ export class ArticleService {
     }
   }
 
+  async findOneById(id: number) {
+    try {
+      return await this.articleRepository.findOne({
+        where: { id },
+        relations: ['thumbnail', 'category'],
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async saveArticle(dto: CreateArticleDto, queryRunner: QueryRunner) {
     try {
       const {
@@ -252,12 +263,30 @@ export class ArticleService {
     return articles;
   }
 
-  async findOneById(id: number) {
+  async findOneForAdmin(user: UserInfoDto, id: number) {
     try {
-      return await this.articleRepository.findOne({
-        where: { id },
-        relations: ['thumbnail', 'category'],
-      });
+      const { email, roles } = user;
+      const foundUser = await this.userService.findUserbyEmail(email);
+      if (!foundUser) {
+        throw new NotFoundException('해당 계정이 존재하지 않습니다.');
+      }
+      if (!roles.includes('ADMIN')) {
+        throw new UnauthorizedException('관리자 권한이 없습니다.');
+      }
+      const foundArticle = await this.findOneById(id);
+      if (!foundArticle) {
+        throw new NotFoundException('해당 아티클을 찾을 수 없습니다.');
+      }
+
+      return {
+        id: foundArticle.id,
+        title: foundArticle.title,
+        subtitle: foundArticle.subtitle,
+        link: foundArticle.link,
+        thumbnail: foundArticle.thumbnail.path,
+        category: foundArticle.category.name,
+        isPublic: foundArticle.isPublic,
+      };
     } catch (error) {
       throw error;
     }
@@ -280,9 +309,10 @@ export class ArticleService {
         createdAt,
       } = dto;
 
-      return await queryRunner.manager.save(Article, {
-        id,
-        data: {
+      const updatedArticle = await queryRunner.manager.update(
+        Article,
+        { id },
+        {
           userId,
           title,
           subtitle,
@@ -290,9 +320,10 @@ export class ArticleService {
           link,
           categoryId,
           isPublic,
-          createdAt,
-        },
-      });
+        }
+      );
+
+      return updatedArticle;
     } catch (error) {
       throw error;
     }
@@ -344,7 +375,11 @@ export class ArticleService {
         isPublic = foundArticle.isPublic;
       }
       if (thumbnail) {
-        thumbnailId = (await this.createThumbnail(thumbnail, queryRunner)).id;
+        const foundThumbnail = await this.createThumbnail(
+          thumbnail,
+          queryRunner
+        );
+        thumbnailId = foundThumbnail.id;
       } else if (!thumbnail) {
         thumbnailId = foundArticle.thumbnail.id;
       }
@@ -373,6 +408,7 @@ export class ArticleService {
         queryRunner
       );
 
+      await queryRunner.commitTransaction();
       return true;
     } catch (error) {
       queryRunner.rollbackTransaction();
@@ -447,6 +483,8 @@ export class ArticleService {
         savingArticle,
         queryRunner
       );
+      await queryRunner.commitTransaction();
+
       return true;
     } catch (error) {
       queryRunner.rollbackTransaction();
@@ -486,6 +524,8 @@ export class ArticleService {
         createdAt: foundArticle.createdAt,
       };
       await this.updateArticle(id, newDto, queryRunner);
+      await queryRunner.commitTransaction();
+
       return true;
     } catch (error) {
       queryRunner.rollbackTransaction();
