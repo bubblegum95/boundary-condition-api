@@ -36,6 +36,7 @@ export class UpdateArticleWithLinkDto {
     description: '아티클 썸네일 이미지 url',
     required: false,
   })
+  @IsOptional()
   thumbnail?: string;
 
   @IsString()
