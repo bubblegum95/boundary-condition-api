@@ -94,23 +94,8 @@ export class ArticleService {
 
   async saveArticle(dto: CreateArticleDto, queryRunner: QueryRunner) {
     try {
-      const {
-        userId,
-        title,
-        subtitle,
-        thumbnailId,
-        link,
-        categoryId,
-        isPublic,
-      } = dto;
       return await queryRunner.manager.save(Article, {
-        userId,
-        title,
-        subtitle,
-        thumbnailId,
-        link,
-        categoryId,
-        isPublic,
+        ...dto,
       });
     } catch (error) {
       throw error;
