@@ -192,15 +192,15 @@ export class ArticleController {
   @Patch('admin/:id')
   async updateArticleWithUrl(
     @Param('id') id: number,
-    @Body() updateArticleDto: UpdateArticleWithLinkDto,
+    @Body() dto: UpdateArticleWithLinkDto,
     @UserInfo() user: UserInfoDto,
     @Res() res: Response
   ) {
     try {
-      console.log('id: ', id);
+      console.log(dto);
       const data = await this.articleService.updateArticleWithLink(
         +id,
-        updateArticleDto,
+        dto,
         user
       );
 
