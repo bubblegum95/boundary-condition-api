@@ -32,7 +32,7 @@ export class FindArticlesDto {
   createdAt: string;
 }
 
-export default class ReturnFindArticleDto {
+export class ReturnFindArticlesDto {
   @ApiProperty({
     example: '아티클을 조회합니다.',
     description: 'response ok message',

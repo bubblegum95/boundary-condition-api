@@ -23,7 +23,7 @@ export class FindArticlesAdminDto {
   createdAt: string;
 }
 
-export default class ReturnFindArticleAdminDto {
+export class ReturnFindArticlesAdminDto {
   @ApiProperty({
     example: '아티클을 조회합니다.',
     description: 'response ok message',
