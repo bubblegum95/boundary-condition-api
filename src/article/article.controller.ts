@@ -392,7 +392,7 @@ export class ArticleController {
   @Get('categories')
   async findPartcial(@Res() res: Response) {
     try {
-      const categories = await this.articleService.findCategories();
+      const categories = await this.articleService.findCategoriesUsing();
       return res.status(HttpStatus.OK).json({
         message: '카테고리 목록을 조회합니다.',
         data: categories,

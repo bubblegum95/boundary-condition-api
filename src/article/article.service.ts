@@ -94,54 +94,9 @@ export class ArticleService {
 
   async saveArticle(dto: CreateArticleDto, queryRunner: QueryRunner) {
     try {
-      const {
-        userId,
-        title,
-        subtitle,
-        thumbnailId,
-        link,
-        categoryId,
-        isPublic,
-      } = dto;
       return await queryRunner.manager.save(Article, {
-        userId,
-        title,
-        subtitle,
-        thumbnailId,
-        link,
-        categoryId,
-        isPublic,
+        ...dto,
       });
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async findAllArticlesForAdmin(query: FindArticleQueryDto) {
-    try {
-      const { limit, page } = query;
-      let foundArticles = await this.articleRepository.find({
-        relations: ['category', 'thumbnail'],
-        skip: (page - 1) * limit,
-        take: limit,
-        order: { id: 'DESC' },
-      });
-      let articleArr = [];
-      foundArticles.map((foundArticle) => {
-        const filteredDate = this.filterDate(foundArticle.createdAt);
-        const article = {
-          id: foundArticle.id,
-          title: foundArticle.title,
-          subtitle: foundArticle.subtitle,
-          link: foundArticle.link,
-          thumbnail: foundArticle.thumbnail.path,
-          category: foundArticle.category.name,
-          isPublic: foundArticle.isPublic,
-          createdAt: filteredDate,
-        };
-        articleArr.push(article);
-      });
-      return articleArr;
     } catch (error) {
       throw error;
     }
@@ -183,9 +138,7 @@ export class ArticleService {
         isPublic,
       };
       const savedArticle = await this.saveArticle(articleDto, queryRunner);
-      if (!savedArticle) {
-        throw new BadRequestException('아티클을 저장할 수 없습니다.');
-      }
+
       await queryRunner.commitTransaction();
       return true;
     } catch (error) {
@@ -250,6 +203,36 @@ export class ArticleService {
     }
   }
 
+  async findAllArticlesForAdmin(query: FindArticleQueryDto) {
+    try {
+      const { limit, page } = query;
+      let foundArticles = await this.articleRepository.find({
+        relations: ['category', 'thumbnail'],
+        skip: (page - 1) * limit,
+        take: limit,
+        order: { id: 'DESC' },
+      });
+      let articleArr = [];
+      foundArticles.map((foundArticle) => {
+        const filteredDate = this.filterDate(foundArticle.createdAt);
+        const article = {
+          id: foundArticle.id,
+          title: foundArticle.title,
+          subtitle: foundArticle.subtitle,
+          link: foundArticle.link,
+          thumbnail: foundArticle.thumbnail.path,
+          category: foundArticle.category.name,
+          isPublic: foundArticle.isPublic,
+          createdAt: filteredDate,
+        };
+        articleArr.push(article);
+      });
+      return articleArr;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async findAllForAdmin(user: UserInfoDto, query: FindArticleQueryDto) {
     const { email, roles } = user;
     const foundUser = await this.userService.findUserbyEmail(email);
@@ -298,40 +281,13 @@ export class ArticleService {
     queryRunner: QueryRunner
   ) {
     try {
-      const {
-        userId,
-        title,
-        subtitle,
-        thumbnailId,
-        link,
-        categoryId,
-        isPublic,
-        createdAt,
-      } = dto;
-
       const updatedArticle = await queryRunner.manager.update(
         Article,
         { id },
-        {
-          userId,
-          title,
-          subtitle,
-          thumbnailId,
-          link,
-          categoryId,
-          isPublic,
-        }
+        { ...dto }
       );
 
       return updatedArticle;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async findUsingArticle() {
-    try {
-      return await this.articleRepository.find({ where: { isPublic: true } });
     } catch (error) {
       throw error;
     }
@@ -559,7 +515,7 @@ export class ArticleService {
   async findAllForUser(dto: SearchArticleQueryDto) {
     try {
       const { category, keyword, page, limit } = dto;
-      let where: any = {};
+      let where: any = { isPublic: true };
 
       if (category) {
         const foundCategory =
@@ -629,7 +585,7 @@ export class ArticleService {
     }
   }
 
-  async findCategories() {
+  async findCategoriesUsing() {
     try {
       const categories = await this.categoryService.findUsed();
       return categories;
