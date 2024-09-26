@@ -15,8 +15,6 @@ export class MapService {
   constructor(
     @InjectRepository(Average)
     private readonly averageRepository: Repository<Average>,
-    @InjectRepository(Weather)
-    private readonly weatherRepository: Repository<Weather>,
     @InjectRepository(Observatory)
     private readonly observatoryRepository: Repository<Observatory>,
     @InjectEntityManager()
@@ -156,9 +154,8 @@ export class MapService {
 
   async findProximateObservatory(dto: ProximateObservatoryToFindDto) {
     try {
+      let list: ProximateObservDto[] = [];
       const { lat, lng, observatories } = dto;
-      let list: ProximateObservDto[] | null = [];
-
       for (const observatory of observatories) {
         const latTo = observatory.lat;
         const lngTo = observatory.lng;

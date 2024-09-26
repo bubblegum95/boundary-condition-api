@@ -83,7 +83,6 @@ export class UserService {
         relations: ['role'],
       });
       const roles = userRoles.map((userRole) => userRole.role.name);
-      console.log(roles);
       return roles;
     } catch (error) {
       throw error;

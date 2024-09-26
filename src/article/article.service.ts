@@ -9,7 +9,6 @@ import { UpdateArticleWithLinkDto } from './dto/update-article-with-link.dto';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import Article from './entities/article.entity';
 import { DataSource, Like, QueryRunner, Repository } from 'typeorm';
-import Category from '../category/entities/category.entity';
 import CreateArticleWithImageDto from './dto/create-article-with-image.dto';
 import { UserService } from '../user/user.service';
 import UserInfoDto from '../auth/dto/userinfo.dto';
@@ -597,7 +596,6 @@ export class ArticleService {
         };
         data.push(newData);
       });
-      console.log('find all for user: ', data);
       return data;
     } catch (error) {
       throw error;
