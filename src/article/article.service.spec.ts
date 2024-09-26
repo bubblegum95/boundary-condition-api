@@ -10,6 +10,9 @@ import * as fs from 'fs';
 import Thumbnail from './entities/thumbnail.entity';
 import Category from '../category/entities/category.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
+import { CreateArticleWithLinkDto } from './dto/create-article-with-link.dto';
+import UserInfoDto from '../auth/dto/userinfo.dto';
+import User from '../user/entities/user.entity';
 
 describe('ArticleService', () => {
   let articleService: ArticleService;
@@ -46,7 +49,9 @@ describe('ArticleService', () => {
     })) as jest.MockedFunction<any>,
   };
 
-  const mockUserService = {};
+  const mockUserService = {
+    findUserbyEmail: jest.fn(),
+  };
   const mockCategoryService = {
     findOneByName: jest.fn(),
   };
@@ -155,6 +160,63 @@ describe('ArticleService', () => {
     };
     const result = await articleService.saveArticle(dto, queryRunner);
     expect(result).toEqual(value);
-    expect(savedArticleResult).toHaveBeenCalledWith(Article, { dto });
+    expect(savedArticleResult).toHaveBeenCalledWith(Article, dto);
   });
+
+  it('should create article with link', async () => {
+    const dto = {
+      title: 'title 입니다',
+      category: 'category', // DTO에 카테고리 추가
+      thumbnail: '썸네일이미지경로', // 썸네일도 포함
+    } as CreateArticleWithLinkDto;
+
+    const user = {
+      email: 'email 입니다',
+      roles: ['ADMIN'], // 사용자 역할 포함
+    } as UserInfoDto;
+
+    const foundUser = {
+      id: 1,
+      email: 'email 입니다',
+      roles: ['ADMIN'],
+    };
+
+    const foundCategory = {
+      id: 1,
+      name: 'category',
+    } as Category;
+
+    const savedThumbnail = {
+      id: 1,
+      path: '썸네일이미지경로',
+    };
+
+    const articleDto = {
+      userId: foundUser.id,
+    } as CreateArticleDto;
+
+    mockUserService.findUserbyEmail.mockResolvedValue(foundUser);
+    articleService.findCategoryByName = jest
+      .fn()
+      .mockResolvedValue(foundCategory);
+    articleService.createThumbnail = jest
+      .fn()
+      .mockResolvedValue(savedThumbnail);
+
+    const queryRunner = mockDataSource.createQueryRunner();
+    const result = await articleService.createArticleWithLink(dto, user);
+
+    expect(result).toEqual(true);
+    expect(mockUserService.findUserbyEmail).toHaveBeenCalledWith(user.email);
+    expect(articleService.findCategoryByName).toHaveBeenCalledWith(
+      dto.category
+    );
+
+    expect(articleService.createThumbnail).toHaveBeenCalledWith(
+      dto.thumbnail,
+      expect.any(Object)
+    );
+  });
+
+  it('should find all articles for admin page', async () => {});
 });
