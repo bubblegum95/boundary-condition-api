@@ -1,6 +1,6 @@
 ## PR 개요
 
-- ex. detective_post 관련 entity 생성
+- ex. entity 생성, 관련된 git issue
 
 ## PR 유형
 
