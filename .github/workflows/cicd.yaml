@@ -58,5 +58,4 @@ jobs:
           script: |
             cd boundary-condition
             git pull origin main
-            npm run build
-            pm2 reload 0
+            source ./run.sh
