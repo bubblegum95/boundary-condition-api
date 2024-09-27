@@ -45,20 +45,20 @@ jobs:
         run: npm test
 
   deploy:
-  needs: test
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: Deploy to Vultr "air"
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD}}
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Deploy to Vultr "air"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD}}
 
-        script: |
-          cd boundary-condition
-          git pull origin main
-          npm run build
-          pm2 reload 0
+          script: |
+            cd boundary-condition
+            git pull origin main
+            npm run build
+            pm2 reload 0
