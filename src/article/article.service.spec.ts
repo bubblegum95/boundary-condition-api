@@ -13,24 +13,42 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { CreateArticleWithLinkDto } from './dto/create-article-with-link.dto';
 import UserInfoDto from '../auth/dto/userinfo.dto';
 import User from '../user/entities/user.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import FindArticleQueryDto from './dto/find-article-query.dto';
+import { FindArticlesAdminDto } from './resDto/find-articles-admin.dto';
 
 describe('ArticleService', () => {
   let articleService: ArticleService;
-  let articleRepository: Repository<Article>;
   let dataSource: DataSource;
   let userService: UserService;
   let categoryService: CategoryService;
-
-  const mockArticleRepository = {
+  let mockArticleRepository = {
     save: jest.fn(),
-    findOne: jest.fn().mockImplementation((id) => {
-      if (id) {
+    findOne: jest.fn().mockImplementation((data) => {
+      if (data) {
         return Article;
       }
     }),
+    find: jest.fn().mockImplementation((dto) => {
+      if (dto === (dto as FindArticleQueryDto)) {
+        const value = [
+          {
+            id: 1,
+            createdAt: new Date(),
+            category: { id: 1, name: 'category' },
+          },
+        ] as Article[];
+        return value;
+      }
+    }),
   };
-  const mockDataSource = {
+  let mockDataSource = {
     createQueryRunner: jest.fn().mockImplementation(() => ({
+      connect: jest.fn().mockReturnThis(),
+      startTransaction: jest.fn().mockReturnThis(),
+      commitTransaction: jest.fn().mockReturnThis(),
+      rollbackTransaction: jest.fn().mockReturnThis(),
+      release: jest.fn().mockReturnThis(),
       manager: {
         save: jest.fn().mockImplementation((entity, data) => {
           if (entity === Thumbnail) {
@@ -41,26 +59,21 @@ describe('ArticleService', () => {
           return null;
         }),
       } as Partial<EntityManager>,
-      connect: jest.fn(),
-      startTransaction: jest.fn(),
-      commitTransaction: jest.fn(),
-      rollbackTransaction: jest.fn(),
-      release: jest.fn(),
     })) as jest.MockedFunction<any>,
   };
-
-  const mockUserService = {
+  let mockUserService = {
     findUserbyEmail: jest.fn(),
   };
-  const mockCategoryService = {
+  let mockCategoryService = {
     findOneByName: jest.fn(),
   };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ArticleService,
         {
-          provide: 'ArticleRepository',
+          provide: getRepositoryToken(Article),
           useValue: mockArticleRepository,
         },
         {
@@ -79,10 +92,13 @@ describe('ArticleService', () => {
     }).compile();
 
     articleService = module.get<ArticleService>(ArticleService);
-    articleRepository = module.get<Repository<Article>>('ArticleRepository');
     dataSource = module.get<DataSource>(DataSource);
     userService = module.get<UserService>(UserService);
     categoryService = module.get<CategoryService>(CategoryService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should save a thumbnail image file', async () => {
@@ -166,20 +182,18 @@ describe('ArticleService', () => {
   it('should create article with link', async () => {
     const dto = {
       title: 'title 입니다',
-      category: 'category', // DTO에 카테고리 추가
-      thumbnail: '썸네일이미지경로', // 썸네일도 포함
+      category: 'category',
+      thumbnail: '썸네일이미지경로',
     } as CreateArticleWithLinkDto;
 
     const user = {
       email: 'email 입니다',
-      roles: ['ADMIN'], // 사용자 역할 포함
+      roles: ['ADMIN'],
     } as UserInfoDto;
 
     const foundUser = {
       id: 1,
-      email: 'email 입니다',
-      roles: ['ADMIN'],
-    };
+    } as User;
 
     const foundCategory = {
       id: 1,
@@ -188,11 +202,19 @@ describe('ArticleService', () => {
 
     const savedThumbnail = {
       id: 1,
-      path: '썸네일이미지경로',
-    };
+      path: dto.thumbnail,
+    } as Thumbnail;
+
+    const savedArticle = {
+      id: 1,
+      title: '여기지롱',
+    } as Article;
 
     const articleDto = {
       userId: foundUser.id,
+      title: dto.title,
+      categoryId: foundCategory.id,
+      thumbnailId: savedThumbnail.id,
     } as CreateArticleDto;
 
     mockUserService.findUserbyEmail.mockResolvedValue(foundUser);
@@ -202,21 +224,48 @@ describe('ArticleService', () => {
     articleService.createThumbnail = jest
       .fn()
       .mockResolvedValue(savedThumbnail);
+    articleService.saveArticle = jest.fn().mockResolvedValue(savedArticle);
 
     const queryRunner = mockDataSource.createQueryRunner();
+    jest
+      .spyOn(mockDataSource, 'createQueryRunner')
+      .mockReturnValue(queryRunner);
     const result = await articleService.createArticleWithLink(dto, user);
 
     expect(result).toEqual(true);
+    expect(queryRunner.connect).toHaveBeenCalled();
+    expect(queryRunner.startTransaction).toHaveBeenCalled();
+    expect(queryRunner.commitTransaction).toHaveBeenCalled();
     expect(mockUserService.findUserbyEmail).toHaveBeenCalledWith(user.email);
     expect(articleService.findCategoryByName).toHaveBeenCalledWith(
       dto.category
     );
-
     expect(articleService.createThumbnail).toHaveBeenCalledWith(
       dto.thumbnail,
-      expect.any(Object)
+      queryRunner
+    );
+    expect(articleService.saveArticle).toHaveBeenCalledWith(
+      articleDto,
+      queryRunner
     );
   });
 
-  it('should find all articles for admin page', async () => {});
+  it('should find all articles for admin page', async () => {
+    const query = { limit: 10, page: 1 } as FindArticleQueryDto;
+    const foundArticles: Article[] = (await mockArticleRepository.find(
+      query
+    )) as Article[];
+    let value: FindArticlesAdminDto[] = [];
+    foundArticles.map((foundArticle) => {
+      const filteredDate = articleService.filterDate(foundArticle.createdAt);
+      const article = {
+        id: foundArticle.id,
+        createdAt: filteredDate,
+        category: foundArticle.category.name,
+      } as FindArticlesAdminDto;
+      value.push(article);
+    });
+    const result = await articleService.findAllArticlesForAdmin(query);
+    expect(result).toEqual(value);
+  });
 });

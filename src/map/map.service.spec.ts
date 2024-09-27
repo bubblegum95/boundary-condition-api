@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MapService } from './map.service';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { Average } from './entities/average.entity';
 import { Observatory } from './entities/observatory.entity';
 import { Logger } from 'winston';
@@ -8,11 +8,10 @@ import ProximateObservatoryToFindDto from './dto/proximateobservatory-to-find.dt
 import ProximateObservDto from './dto/proximateobserv.dto';
 import { LocationInfoDto } from './dto/locationInfo.dto';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
 describe('MapService', () => {
   let mapService: MapService;
-  let averageRepository: Repository<Average>;
-  let observatoryRepository: Repository<Observatory>;
   let entityManager: EntityManager;
   let logger: Logger;
 
@@ -46,11 +45,11 @@ describe('MapService', () => {
       providers: [
         MapService,
         {
-          provide: 'AverageRepository',
+          provide: getRepositoryToken(Average),
           useValue: mockAverageRepository,
         },
         {
-          provide: 'ObservatoryRepository',
+          provide: getRepositoryToken(Observatory),
           useValue: mockObservatoryRepository,
         },
         {
@@ -65,10 +64,6 @@ describe('MapService', () => {
     }).compile();
 
     mapService = module.get<MapService>(MapService);
-    averageRepository = module.get<Repository<Average>>('AverageRepository');
-    observatoryRepository = module.get<Repository<Observatory>>(
-      'ObservatoryRepository'
-    );
     entityManager = module.get<EntityManager>(EntityManager);
     logger = module.get(WINSTON_MODULE_NEST_PROVIDER);
   });
