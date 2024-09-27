@@ -22,6 +22,7 @@ import UpdateArticleDto from './dto/update-article.dto';
 import { CategoryService } from '../category/category.service';
 import UpdateIsPublicDto from './dto/update-is-public.dto';
 import { SearchArticleQueryDto } from './dto/search-article-query.dto';
+import { FindArticlesAdminDto } from './resDto/find-articles-admin.dto';
 
 @Injectable()
 export class ArticleService {
@@ -66,14 +67,12 @@ export class ArticleService {
     }
   }
 
-  filterDate(date: Date) {
+  filterDate(date: Article['createdAt']): string {
     try {
       const newDate = new Date(date);
       const year = newDate.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-
-      // '0000.00.00' 형식으로 조합
+      const month = String(newDate.getMonth() + 1).padStart(2, '0');
+      const day = String(newDate.getDate()).padStart(2, '0');
       const formattedDate = `${year}.${month}.${day}`;
       return formattedDate;
     } catch (error) {
@@ -92,11 +91,32 @@ export class ArticleService {
     }
   }
 
-  async saveArticle(dto: CreateArticleDto, queryRunner: QueryRunner) {
+  async saveArticle(
+    dto: CreateArticleDto,
+    queryRunner: QueryRunner
+  ): Promise<Article> {
     try {
       return await queryRunner.manager.save(Article, {
         ...dto,
       });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateArticle(
+    id: number,
+    dto: UpdateArticleDto,
+    queryRunner: QueryRunner
+  ) {
+    try {
+      const updatedArticle = await queryRunner.manager.update(
+        Article,
+        { id },
+        { ...dto }
+      );
+
+      return updatedArticle;
     } catch (error) {
       throw error;
     }
@@ -114,20 +134,25 @@ export class ArticleService {
       const { title, subtitle, thumbnail, link, category, isPublic } = dto;
       const { email, roles } = user;
       const foundUser = await this.userService.findUserbyEmail(email);
+
       if (!foundUser) {
         throw new NotFoundException('해당 계정이 존재하지 않습니다.');
       }
+
       if (!roles.includes('ADMIN')) {
         throw new UnauthorizedException('관리자 권한이 없습니다.');
       }
+
       const foundCategory = await this.findCategoryByName(category);
       if (!foundCategory) {
         throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
       }
+
       const savedThumbnail = await this.createThumbnail(thumbnail, queryRunner);
       if (!savedThumbnail) {
         throw new BadRequestException('썸네일을 저장할 수 없습니다.');
       }
+
       const articleDto = {
         userId: foundUser.id,
         title,
@@ -137,11 +162,13 @@ export class ArticleService {
         categoryId: foundCategory.id,
         isPublic,
       };
-      const savedArticle = await this.saveArticle(articleDto, queryRunner);
 
+      await this.saveArticle(articleDto, queryRunner);
       await queryRunner.commitTransaction();
+
       return true;
     } catch (error) {
+      console.log('error: ', error);
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
@@ -162,24 +189,33 @@ export class ArticleService {
       const { title, subtitle, link, category, isPublic } = dto;
       const { email, roles } = user;
       const foundUser = await this.userService.findUserbyEmail(email);
+
       if (!foundUser) {
         throw new NotFoundException('해당 계정이 존재하지 않습니다.');
       }
+
       if (!roles.includes('ADMIN')) {
         throw new UnauthorizedException('관리자 권한이 없습니다.');
       }
+
       const foundCategory = await this.findCategoryByName(category);
+
       if (!foundCategory) {
         throw new NotFoundException('해당 카테고리가 존재하지 않습니다.');
       }
+
       const path = await this.saveThumbnailImage(image);
+
       if (!path) {
         throw new BadRequestException('해당 이미지를 저장할 수 없습니다.');
       }
+
       const savedThumbnail = await this.createThumbnail(path, queryRunner);
+
       if (!savedThumbnail) {
         throw new BadRequestException('썸네일을 저장할 수 없습니다.');
       }
+
       const articleDto = {
         userId: foundUser.id,
         title,
@@ -190,9 +226,11 @@ export class ArticleService {
         isPublic,
       };
       const savedArticle = await this.saveArticle(articleDto, queryRunner);
+
       if (!savedArticle) {
         throw new BadRequestException('아티클을 저장할 수 없습니다.');
       }
+
       await queryRunner.commitTransaction();
       return true;
     } catch (error) {
@@ -206,21 +244,19 @@ export class ArticleService {
   async findAllArticlesForAdmin(query: FindArticleQueryDto) {
     try {
       const { limit, page } = query;
-      let foundArticles = await this.articleRepository.find({
+      let foundArticles: Array<Article> = await this.articleRepository.find({
         relations: ['category', 'thumbnail'],
         skip: (page - 1) * limit,
         take: limit,
         order: { id: 'DESC' },
       });
-      let articleArr = [];
+      let articleArr: FindArticlesAdminDto[] = [];
       foundArticles.map((foundArticle) => {
         const filteredDate = this.filterDate(foundArticle.createdAt);
-        const article = {
+        const article: FindArticlesAdminDto = {
           id: foundArticle.id,
           title: foundArticle.title,
           subtitle: foundArticle.subtitle,
-          link: foundArticle.link,
-          thumbnail: foundArticle.thumbnail.path,
           category: foundArticle.category.name,
           isPublic: foundArticle.isPublic,
           createdAt: filteredDate,
@@ -270,24 +306,6 @@ export class ArticleService {
         category: foundArticle.category.name,
         isPublic: foundArticle.isPublic,
       };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async updateArticle(
-    id: number,
-    dto: UpdateArticleDto,
-    queryRunner: QueryRunner
-  ) {
-    try {
-      const updatedArticle = await queryRunner.manager.update(
-        Article,
-        { id },
-        { ...dto }
-      );
-
-      return updatedArticle;
     } catch (error) {
       throw error;
     }
