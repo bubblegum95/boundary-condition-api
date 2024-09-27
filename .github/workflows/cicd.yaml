@@ -63,3 +63,4 @@ jobs:
           script: |
             cd boundary-condition
             git pull origin main
+            source ./run.sh
